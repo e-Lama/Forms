@@ -1,0 +1,15 @@
+./prg/*.prg
+-lhbct 
+-lhbmemio
+-beep 
+-b 
+-warn=max 
+-jobs=3 
+-gc3
+-es2
+-w3
+-oforms.bin
+-lgui
+-i./include/
+-L../libgui/
+-i../libgui/include/
