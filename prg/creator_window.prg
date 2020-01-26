@@ -19,13 +19,10 @@ METHOD edit_form() CLASS Creator_window
     LOCAL cOldFooter := Window():footer(Config():get_config('CreatorWindowFooter'))
     LOCAL lActiveUpperLeftCorner := .T.
     LOCAL lFinish := .F.
+    LOCAL lSave := .F.
     LOCAL nOldWindow
-    LOCAL lSave
     LOCAL cScreen
     LOCAL nKey
-
-    //SAVE SCREEN TO cScreen
-    //WSelect(nOldWindow)
 
     Window():refresh_header()
     Window():refresh_footer()
@@ -40,20 +37,10 @@ METHOD edit_form() CLASS Creator_window
 
         nOldWindow := WSelect()
         WSelect(0)
-        //Alert('OLD' + Str(nOldWindow))
-        //WSelect(0)
-        //Alert(Str(WSelect()) + Str(WClose()))
-        //WClose()
-        //Alert(Str(WSelect()))
         RESTORE SCREEN FROM cScreen 
         WSelect(nOldWindow)
 
-        //Window():refresh_header()
-        //Window():refresh_footer()
-
         ::display_form()
-
-        GETLIST := ASize(GETLIST, Len(GETLIST) -1)
 
         nKey := Inkey(0)
 
@@ -101,20 +88,16 @@ METHOD edit_form() CLASS Creator_window
                     ENDIF
                 ENDIF
             CASE nKey == K_ENTER
-                ::form_fast_edit(cScreen)
+                ::form_fast_edit(WRow(), WCol(), WLastRow(), WLastCol(), cScreen)
             CASE nKey == K_ESC
                 IF YesNo(Config():get_config('YesNoBreakEdition'))
                     IF YesNo(Config():get_config('YesNoSave'))
                         IF ::save_form()
                             lFinish := .T.
                             lSave := .T.
-                        ELSE
-                            lFinish := .F.
-                            lSave := .F.
                         ENDIF
                     ELSE 
                         lFinish := .T.
-                        lSave := .F.
                     ENDIF
                 ENDIF
         ENDCASE

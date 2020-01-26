@@ -7,7 +7,6 @@
 #include "parser.ch"
 
 REQUEST HB_CODEPAGE_UTF8EX
-//REQUEST HB_CODEPAGE_UTF8
 
 PROCEDURE main()
 
@@ -19,7 +18,7 @@ PROCEDURE main()
 
     BEGIN SEQUENCE
 
-        //ErrorBlock({| oError | standard_error_handler(oError)})
+        ErrorBlock({| oError | standard_error_handler(oError)})
 
         IF Config():init_config(create_initial_config_hash()) .AND. Variable():handle_variables()
 
@@ -86,7 +85,7 @@ EXIT PROCEDURE finish()
 
 RETURN
 
-PROCEDURE quit_program()
+STATIC PROCEDURE quit_program()
 
     LOCAL axOldKeys
 
@@ -100,51 +99,45 @@ PROCEDURE quit_program()
 
 RETURN
 
-FUNCTION important_form(cID)
+STATIC FUNCTION important_form(cID)
 
-    LOCAL acImportantForms := {'CREATE_FORM', 'SET_DISTINCT_NAME', 'WHERE_MOVE', 'SWAP'}
+    LOCAL acImportantForms := {'CREATE_FORM', 'SET_DISTINCT_NAME', 'WHERE_MOVE', 'SWAP', 'GET_VARIABLE'}
 
 RETURN AScan(acImportantForms, AllTrim(cId)) != 0
 
-PROCEDURE display_form()
+STATIC PROCEDURE display_form()
 
     MEMVAR GETLIST
 
     LOCAL cOldColor := SetColor()
     LOCAL cOldFooter := Window():footer(Config():get_config('DisplayFormFooter'))
     LOCAL cOldHeader := Window():header(Config():get_config('DisplayFormHeader'))
-    LOCAL hJson
     LOCAL cOldScreen
     LOCAL axOldKeys
 
     ZAP KEYS TO axOldKeys
+    SAVE SCREEN TO cOldScreen
 
     IF EoF()
         Inform(Config():get_config('NoRecordSelected'))
-        RESTORE KEYS FROM axOldKeys
-        RETURN
-    ENDIF
-
-    SAVE SCREEN TO cOldScreen
-
-    hJson := hb_JsonDecode(dbVariables->json)
-
-    IF ValType(hJson) != 'H'
+    ELSEIF ValType(hb_JsonDecode(dbVariables->json)) != 'H'
         Inform(Config():get_config('CorruptionDetected'))
-        RESTORE KEYS FROM axOldKeys
-        RETURN
-    ENDIF
-
-    IF !Parser():prepare_form_from_database(field->language, field->id, hJson) 
-        Inform(Parser():log())
-    ELSE
+    ELSEIF validate()
+        
         Window():refresh_header()
         Window():refresh_footer()
-        IF Len(GETLIST) > 0 .AND. NoYes(Config():get_config('DoReadOrder'))
-            READ
+
+        IF prepare_form()
+            IF Len(GETLIST) > 0 .AND. NoYes(Config():get_config('DoReadOrder'))
+                READ
+            ELSE
+                Inkey(0)
+            ENDIF
         ELSE
-            Inkey(0)
+            Inform(Parser():log(''))
         ENDIF
+    ELSE
+        Inform(Parser():log(''))
     ENDIF
 
     WClose()
@@ -157,7 +150,7 @@ PROCEDURE display_form()
 
 RETURN
 
-PROCEDURE create_new_form()
+STATIC PROCEDURE create_new_form()
 
     MEMVAR GETLIST
 
@@ -212,7 +205,7 @@ PROCEDURE create_new_form()
                 COMMIT
 
                 IF YesNo(Config():get_config('CreateWithoutWindow')) .OR. Creator_window():edit_form()
-                    add_to_form(.T.)
+                    add_to_form()
                 ELSE
                     WClose()
                     delete_form()
@@ -229,16 +222,15 @@ PROCEDURE create_new_form()
 
 RETURN
 
-PROCEDURE add_to_form(lFromCreateForm)
+STATIC PROCEDURE add_to_form()
 
     MEMVAR GETLIST
 
     LOCAL cOldHeader := Window():header(Config():get_config('AddToFormHeader'))
-    LOCAL cOldFooter := Window():footer(Config():get_config('AddToFormFooter'))
+    LOCAL cOldFooter := Window():footer(Config():get_config('MenuDefaultFooter'))
     LOCAL aoOldGetList := AClone(GETLIST)
     LOCAL acMenuItems := {'BOX', 'SAY', 'GET', 'CHECKBOX', 'LISTBOX', 'RADIOGROUP'}
     LOCAL nChoose := 1
-    LOCAL hJson
     LOCAL axOldKeys
     LOCAL cOldScreen
 
@@ -248,16 +240,14 @@ PROCEDURE add_to_form(lFromCreateForm)
         Inform(Config():get_config('NoRecordSelected'))
         RESTORE KEYS FROM axOldKeys
         RETURN
+    ELSEIF important_form(field->id) .AND. !NoYes(Config():get_config('ImportantForm'))
+        RESTORE KEYS FROM axOldKeys
+        RETURN
     ENDIF
-
-    SAVE SCREEN TO cOldScreen
 
     Window():refresh_header()
     Window():refresh_footer()
-
-    IF !Empty(field->code) .AND. (ValType(lFromCreateForm) != 'L' .OR. (ValType(lFromCreateForm) == 'L' .AND. !lFromCreateForm))
-        field->code := field->code + OBJECT_SEPARATOR
-    ENDIF
+    SAVE SCREEN TO cOldScreen
 
     DO WHILE nChoose != 0
 
@@ -267,20 +257,20 @@ PROCEDURE add_to_form(lFromCreateForm)
             WClose()
         ENDIF
 
-        GETLIST := {}
+        CLEAR GETS
         
-        hJson := hb_JsonDecode(dbVariables->json)
-        IF ValType(hJson) != 'H'
-            hJson := hb_Hash()
-        ENDIF
-        Parser():prepare_form_from_database(field->language, field->id, hJson)
+        IF prepare_form() 
 
-        nChoose := display_menu_center_autosize(Window():center_row(), Window():center_col(), acMenuItems, .T.;
-                                               , 'menu_search_allow_exit', 1, Config():get_config('DefaultMenuColor');
-                                               , Config():get_config('DefaultBox');
-                                               )
-        IF nChoose > 0
-            &('Creator_' + Lower(acMenuItems[nChoose]) + '():edit_form()')
+            nChoose := display_menu_center_autosize(Window():center_row(), Window():center_col(), acMenuItems, .T.;
+                                                   , 'menu_search_allow_exit_move', 1, Config():get_config('DefaultMenuColor');
+                                                   , Config():get_config('DefaultBox');
+                                                   )
+            IF nChoose > 0
+                &('Creator_' + Lower(acMenuItems[nChoose]) + '():edit_form()')
+            ENDIF
+        ELSE
+            Inform(Parser():log(''))
+            nChoose := 0
         ENDIF
     ENDDO
 
@@ -292,12 +282,14 @@ PROCEDURE add_to_form(lFromCreateForm)
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen
+    Window():refresh_header()
+    Window():refresh_footer()
     RESTORE KEYS FROM axOldKeys
     GETLIST := aoOldGetList
 
 RETURN
 
-PROCEDURE fast_edit()
+STATIC PROCEDURE fast_edit()
 
     LOCAL nOldCursor := Set(_SET_CURSOR)
     LOCAL nTop := Window():get_top() + 1
@@ -308,30 +300,31 @@ PROCEDURE fast_edit()
     LOCAL cOldScreen
 
     ZAP KEYS TO axOldKeys
+    SAVE SCREEN TO cOldScreen
 
     IF EoF()
         Inform(Config():get_config('NoRecordSelected'))
-        RESTORE KEYS FROM axOldKeys
-        RETURN
+    ELSEIF important_form(field->id) .AND. !NoYes(Config():get_config('ImportantForm'))
+        //...
+    ELSE
+
+        @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
+        @ nTop, Int((nRight + nLeft - Len(' Kod ')) / 2) SAY ' Kod '
+        field->code := MemoEdit(field->code, nTop + 1, nLeft + 1, nBottom - 1, nRight - 1)
+        @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
+        @ nTop, Int((nRight + nLeft - Len(' JSON ')) / 2) SAY ' JSON '
+        dbVariables->json := MemoEdit(dbVariables->json, nTop + 1, nLeft + 1, nBottom - 1, nRight - 1)
+
+        SET CURSOR (cast(nOldCursor, 'L'))
+
     ENDIF
-
-    SAVE SCREEN TO cOldScreen
-
-    @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
-    @ nTop, Int((nRight + nLeft - Len(' Kod ')) / 2) SAY ' Kod '
-    field->code := MemoEdit(field->code, nTop + 1, nLeft + 1, nBottom - 1, nRight - 1)
-    @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
-    @ nTop, Int((nRight + nLeft - Len(' JSON ')) / 2) SAY ' JSON '
-    dbVariables->json := MemoEdit(dbVariables->json, nTop + 1, nLeft + 1, nBottom - 1, nRight - 1)
-
-    SET CURSOR (cast(nOldCursor, 'L'))
 
     RESTORE KEYS FROM axOldKeys
     RESTORE SCREEN FROM cOldScreen
 
 RETURN
 
-PROCEDURE ask_delete_form()
+STATIC PROCEDURE ask_delete_form()
 
     LOCAL axOldKeys
 
@@ -339,17 +332,16 @@ PROCEDURE ask_delete_form()
 
     IF EoF()
         Inform(Config():get_config('NoRecordSelected'))
-        RESTORE KEYS FROM axOldKeys
-        RETURN
-    ENDIF
+    ELSE
 
-    IF NoYes(Config():get_config('YesNoDeleteForm'))
-        IF important_form(field->id) 
-            IF NoYes(Config():get_config('ImportantForm'))
+        IF NoYes(Config():get_config('YesNoDeleteForm'))
+            IF important_form(field->id) 
+                IF NoYes(Config():get_config('ImportantForm'))
+                    delete_form()
+                ENDIF
+            ELSE
                 delete_form()
             ENDIF
-        ELSE
-            delete_form()
         ENDIF
     ENDIF
 
@@ -357,7 +349,7 @@ PROCEDURE ask_delete_form()
 
 RETURN
 
-PROCEDURE delete_form()
+STATIC PROCEDURE delete_form()
 
     LOCAL nOldSelect := Select()
 
@@ -378,7 +370,7 @@ PROCEDURE delete_form()
 
 RETURN
 
-PROCEDURE change_id()
+STATIC PROCEDURE change_id()
 
     MEMVAR GETLIST
 
@@ -397,16 +389,13 @@ PROCEDURE change_id()
     LOCAL axOldKeys
 
     ZAP KEYS TO axOldKeys
-
-    IF EoF()
-        Inform(Config():get_config('NoRecordSelected'))
-        RESTORE KEYS FROM axOldKeys
-        RETURN
-    ENDIF
-    
     SAVE SCREEN TO cOldScreen
 
-    IF NoYes(Config():get_config('YesNoFormIdLanguageChange'))
+    IF EoF() 
+        Inform(Config():get_config('NoRecordSelected'))
+    ELSEIF important_form(field->id) .AND. !NoYes(Config():get_config('ImportantForm'))
+        //...
+    ELSEIF NoYes(Config():get_config('YesNoFormIdLanguageChange'))
 
         Window():refresh_header()
         Window():refresh_footer()
@@ -457,7 +446,7 @@ PROCEDURE change_id()
 
 RETURN
 
-PROCEDURE clone()
+STATIC PROCEDURE clone()
 
     MEMVAR GETLIST
 

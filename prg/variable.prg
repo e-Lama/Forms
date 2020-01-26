@@ -15,7 +15,7 @@ EXPORTED:
 
     METHOD set_value(xValue) INLINE ::axValues[::nIndex] := xValue
 
-    METHOD edit(nRow, nCol)
+    METHOD edit()
 
     METHOD to_string(lVariable, cName)
 
@@ -42,7 +42,7 @@ HIDDEN:
     METHOD remove_spaces(cVariable)
     METHOD get_type_array()
 
-    METHOD change_value(nRow, nCol, nIndex, lUpdated)
+    METHOD change_value(nIndex, lUpdated)
     METHOD change_type(lUpdated)
     METHOD changeable_type() INLINE Len(::acPossibleTypes) > 1
 
@@ -103,24 +103,21 @@ METHOD to_string(lVariable, cName) CLASS Variable
 
 RETURN cString
 
-METHOD change_value(nRow, nCol, nIndex, lUpdated) CLASS Variable
+METHOD change_value(nIndex, lUpdated) CLASS Variable
 
-    LOCAL GETLIST := Array(0)
+    MEMVAR GETLIST
+
     LOCAL lContinue := .T.
     LOCAL xValue := ::axValues[nIndex]
     LOCAL cType := ValType(xValue)
-    LOCAL bValidate := ::abValidates[nIndex]
-    LOCAL cWasColor
-    LOCAL cOldScreen 
-
-    SAVE SCREEN TO cOldScreen
+    LOCAL hVariables := hb_Hash()
 
     IF YesNo(Config():get_config('ChangeVariableValue'))
 
         IF cType == 'A'
             DO WHILE lContinue
                 xValue := hb_JsonDecode(MemoEdit(hb_jsonEncode(xValue, .T.)))
-                IF Eval(bValidate, xValue)
+                IF Eval(::abValidates[nIndex], xValue)
                     lContinue := .F.
                 ELSE
                     lContinue := NoYes(Config():get_config('IncorrectValueVariable'))
@@ -131,16 +128,37 @@ METHOD change_value(nRow, nCol, nIndex, lUpdated) CLASS Variable
                 xValue := xValue + Space(VARIABLE_CHARACTER_LENGTH - Len(xValue))
             ENDIF
 
-            cWasColor := SetColor('N/W')
-            @ nRow - 1, nCol + 1 CLEAR TO nRow + 1, nCol + IF(cType == 'C', Len(xValue), 20)
-            @ nRow, nCol GET xValue COLOR 'N/W'
-            GETLIST[1][4] := bValidate
-            READ
-            SetColor(cWasColor)
+            hVariables['variable'] := xValue
 
+            DO CASE
+                CASE cType == 'C'
+                    hVariables['picture'] := '@K ' + Replicate('X', Len(xValue))
+                CASE cType == 'N'
+                    hVariables['picture'] := '@K ' + Replicate('9', Len(Str(0)))
+                CASE cType == 'L'
+                    hVariables['picture'] := '@K Y'
+                CASE cType == 'D'
+                    hVariables['picture'] := '@KD'
+            ENDCASE
+
+            GETLIST := {}
+
+            IF Parser():prepare_form_from_database(Config():get_config('Language'), 'GET_VARIABLE', hVariables)
+                READ
+                hVariables := Parser():get_answers()
+                WClose()
+
+                IF cType == 'N'
+                    xValue := Val(hVariables['variable'])
+                ELSEIF cType == 'D'
+                    //...
+                ELSE
+                    xValue := cast(hVariables['variable'], cType)
+                ENDIF
+            ELSE
+                throw(Config():get_config('CriticalError'))
+            ENDIF
         ENDIF
-
-        RESTORE SCREEN FROM cOldScreen
 
         IF cType == 'A'
             lUpdated := !array_equals(xValue, ::axValues[nIndex])
@@ -187,7 +205,7 @@ METHOD change_type(lUpdated)
     IF YesNo(Config():get_config('ChangeVariableDataType'))
 
         nChoose := display_menu_center_autosize(Window():center_row(), Window():center_col(), acMenuItems, .T.;
-                                               , 'menu_search_allow_exit', 1, Config():get_config('DefaultMenuColor');
+                                               , 'menu_search_allow_exit_move', 1, Config():get_config('DefaultMenuColor');
                                                , Config():get_config('DefaultBox');
                                                )
         IF nChoose != 0
@@ -197,7 +215,7 @@ METHOD change_type(lUpdated)
 
 RETURN nChoose
 
-METHOD edit(nRow, nCol) CLASS Variable
+METHOD edit() CLASS Variable
 
     LOCAL nOldWindow := WSelect()
     LOCAL lUpdated := .F.
@@ -213,12 +231,14 @@ METHOD edit(nRow, nCol) CLASS Variable
         nNewIndex := ::nIndex
     ENDIF
 
-    xNewValue := ::change_value(nRow, nCol, nNewIndex, @lUpdated)
-    
-    IF lUpdated .AND. YesNo(Config():get_config('SaveVariableEditing'))
-        ::axValues[nNewIndex] := xNewValue
-        ::nIndex := nNewIndex
-        lSave := .T.
+    IF nNewIndex != 0
+        xNewValue := ::change_value(nNewIndex, @lUpdated)
+
+        IF lUpdated .AND. YesNo(Config():get_config('SaveVariableEditing'))
+            ::axValues[nNewIndex] := xNewValue
+            ::nIndex := nNewIndex
+            lSave := .T.
+        ENDIF
     ENDIF
 
     WSelect(nOldWindow)
@@ -242,8 +262,8 @@ RETURN cVariable
 
 METHOD handle_variables() CLASS Variable
 
-    LOCAL cNoDataBaseFileDialog := 'Nie ma pliku bazy danych. Czy utworzyc?'
-    LOCAL cNoDataBaseFileInform := 'Brak pliku bazy danych. Program zostanie zamkniety'
+    LOCAL cNoDataBaseFileDialog := Config():get_config('NoVariableFileDialog')
+    LOCAL cNoDataBaseFileInform := Config():get_config('NoVariableFileInform')
     LOCAL lSuccess
 
     IF File(Config():get_config('dbfPath') + Config():get_config('VariablesDefinitions'))

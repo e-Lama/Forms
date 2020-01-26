@@ -36,7 +36,7 @@ STATIC PROCEDURE renumber()
 
     GO TOP
     DO WHILE !EoF()
-        field->line_nr := PadL(LTrim(Str(Val(n))), 4)
+        field->line_nr := PadL(LTrim(Str(n)), 4)
         n++
         SKIP
     ENDDO
@@ -235,12 +235,11 @@ STATIC PROCEDURE save()
     cNewCode := Left(cNewCode, Len(cNewCode) - Len(OBJECT_SEPARATOR))
 
     hJson := hb_JsonDecode(dbVariables->json)
-    Parser():log('')
     IF Parser():check_correctness(hb_ATokens(cNewCode, OBJECT_SEPARATOR), hJson)
         dbForms->code := cNewCode
         COMMIT
     ELSE
-        Inform(Parser():log())
+        Inform(Parser():log(''))
     ENDIF
 
     GO nOldRecNo
@@ -269,7 +268,6 @@ STATIC PROCEDURE magic()
     ZAP KEYS TO axOldKeys
 
     hJson := hb_JsonDecode(dbVariables->json)
-    Parser():log('')
 
     IF Parser():check_correctness(acCode, hJson)
 
@@ -281,7 +279,7 @@ STATIC PROCEDURE magic()
             WClose()
         ENDIF
     ELSE
-        Inform(Parser():log())
+        Inform(Parser():log(''))
     ENDIF
 
     RESTORE KEYS FROM axOldKeys
@@ -305,9 +303,10 @@ STATIC PROCEDURE display_line()
     ZAP KEYS TO axOldKeys
 
     hJson := hb_JsonDecode(dbVariables->json)
-    Parser():log('')
 
-    IF Parser():check_correctness(acCode, hJson)
+    IF ValType(hJson) != 'H'
+        Inform(Config():get_config('CorruptionDetected'))
+    ELSEIF Parser():check_correctness(acCode, hJson)
 
         Window():refresh_footer()
 
@@ -321,7 +320,7 @@ STATIC PROCEDURE display_line()
             WClose()
         ENDIF
     ELSE
-        Inform(Parser():log())
+        Inform(Parser():log(''))
     ENDIF
 
     GETLIST := aoOldGetList
@@ -358,8 +357,10 @@ STATIC PROCEDURE display_form()
     cNewCode := Left(cNewCode, Len(cNewCode) - Len(OBJECT_SEPARATOR))
 
     hJson := hb_JsonDecode(dbVariables->json)
-    Parser():log('')
-    IF Parser():prepare_form_from_record(hb_ATokens(cNewCode, OBJECT_SEPARATOR), hJson)
+
+    IF ValType(hJson) != 'H'
+        Inform(Config():get_config('CorruptionDetected'))
+    ELSEIF Parser():prepare_form_from_record(hb_ATokens(cNewCode, OBJECT_SEPARATOR), hJson)
 
         IF Inkey(0) == K_ALT_ENTER
             READ
@@ -369,7 +370,7 @@ STATIC PROCEDURE display_form()
             WClose()
         ENDIF
     ELSE
-        Inform(Parser():log())
+        Inform(Parser():log(''))
     ENDIF
 
     GO nOldRecNo
@@ -389,6 +390,7 @@ PROCEDURE change_order()
     LOCAL cOldHeader := Window():header(Config():get_config('ReorderHeader'))
     LOCAL acRows := hb_ATokens(field->code, OBJECT_SEPARATOR)
     LOCAL axStructure := {{'line_nr', 'C', 4, 0}, {'code', 'C', 2056, 0}} 
+    LOCAL lChanged := .F.
     LOCAL oRowBrowse
     LOCAL cOldScreen
     LOCAL axOldKeys
@@ -438,7 +440,17 @@ PROCEDURE change_order()
 
     oRowBrowse:display()
 
-    IF YesNo(Config():get_config('YesNoSave'))
+    GO TOP
+
+    FOR i := 1 TO Len(acRows)
+        IF field->code != acRows[i]
+            lChanged := .T.
+            EXIT
+        ENDIF
+        SKIP
+    NEXT
+
+    IF lChanged .AND. YesNo(Config():get_config('YesNoSave'))
         save(nOldRecNo)
     ENDIF
 

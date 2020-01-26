@@ -21,7 +21,7 @@ EXPORTED:
 
 PROTECTED:
 
-    METHOD form_fast_edit(cScreen) 
+    METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen) 
     METHOD display_form()
     METHOD make_form_array()
     METHOD save_form()
@@ -42,6 +42,12 @@ HIDDEN:
 ENDCLASS LOCK 
 
 METHOD make_form_array() CLASS Creator
+
+    LOCAL hJson := hb_JsonDecode(dbVariables->json)
+
+    IF ValType(hJson) != 'H'
+        hJson := hb_Hash()
+    ENDIF
 
     DO CASE
         CASE Creator():cType == OBJECT_WINDOW
@@ -140,7 +146,7 @@ METHOD make_form_array() CLASS Creator
                                                     , .F.;
                                                     , {IF(WSelect() == 0, LEFT_POSITION, 0)};
                                                     , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) > IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                     );
                                     , Variable():new('Expression';
                                                     , .F.;
@@ -174,7 +180,7 @@ METHOD make_form_array() CLASS Creator
                                                     , .F.;
                                                     , {IF(WSelect() == 0, LEFT_POSITION, 0)};
                                                     , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                     );
                                     , Variable():new('Expression';
                                                     , .F.;
@@ -196,7 +202,7 @@ METHOD make_form_array() CLASS Creator
                                                     , {{| oGet | is_color(oGet:buffer, .T.)}};
                                                     , .T.;
                                                     );
-                                    , Variable():new('Variable';
+                                    , Variable():new(::set_distinct_name('Variable', hJson);
                                                     , .T.;
                                                     , {'Variable', 2.78, d"1991-01-01", .F.};
                                                     , {'C', 'N', 'D', 'L'};
@@ -254,9 +260,9 @@ METHOD make_form_array() CLASS Creator
                                                     , .F.;
                                                     , {IF(WSelect() == 0, LEFT_POSITION, 0)};
                                                     , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                     );
-                                    , Variable():new('Variable';
+                                    , Variable():new(::set_distinct_name('Variable', hJson);
                                                     , .T.;
                                                     , {.F.};
                                                     , {'L'};
@@ -342,7 +348,7 @@ METHOD make_form_array() CLASS Creator
                                                     , {'N'};
                                                     , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                     );
-                                    , Variable():new('Variable';
+                                    , Variable():new(::set_distinct_name('Variable', hJson);
                                                     , .T.;
                                                     , {'Variable', 1};
                                                     , {'C', 'N'};
@@ -440,7 +446,7 @@ METHOD make_form_array() CLASS Creator
                                                     , {'N'};
                                                     , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                     );
-                                    , Variable():new('Variable';
+                                    , Variable():new(::set_distinct_name('Variable', hJson);
                                                     , .T.;
                                                     , {'Variable', 1};
                                                     , {'C', 'N'};
@@ -506,8 +512,11 @@ METHOD set_distinct_name(cName, hJson)
 
     LOCAL nOldWindow := WSelect()
     LOCAL nOldRecNo := dbForms->(RecNo())
+    LOCAL aoOldGetList := AClone(GETLIST)
     LOCAL hVariables := hb_Hash('Variable', cName + Space(VARIABLE_CHARACTER_LENGTH - Len(cName)))
     LOCAL cOldScreen
+
+    CLEAR GETS
 
     IF YesNo(Config():get_config('ChangeVariableName') + ';' + cName)
         WSelect(0)
@@ -540,6 +549,7 @@ METHOD set_distinct_name(cName, hJson)
         ENDIF
     ENDDO
 
+    GETLIST := aoOldGetList
     WSelect(nOldWindow)
     dbForms->(dbGoTo(nOldRecNo))
 
@@ -555,15 +565,16 @@ METHOD save_form() CLASS Creator
     LOCAL nOldSelect := Select()
     LOCAL cOldFooter := Window():footer(Config():get_config('SaveFooter'))
     LOCAL cOldHeader := Window():header(Config():get_config('SaveHeader'))
+    LOCAL cVariable := Config():get_config('SaveAsVariable')
     LOCAL cString := Creator():cType + LINE_SEPARATOR
     LOCAL axStructure := {;
                             {'begin_name', 'C', 20, 0}; 
                             , {'name', 'C', 20, 0};
                             , {'value', 'C', 20, 0};
-                            , {'method', 'C', 7, 0};
+                            , {'method', 'C', 8, 0};
                             , {'is_ID', 'L', 1, 0};
                          } 
-    LOCAL nRowLength := 72
+    LOCAL nRowLength := 73
     LOCAL nTop := Window():center_row() - Int(Len(Creator():aoVariables) / 2)
     LOCAL nLeft := Window():center_col() - Int(nRowLength / 2)
     LOCAL lEnd := .F.
@@ -590,7 +601,6 @@ METHOD save_form() CLASS Creator
 
     FOR EACH oElement IN Creator():aoVariables
         APPEND BLANK
-        field->begin_name := oElement:get_name()
         field->name := oElement:get_name()
         IF ValType(oElement:get_value()) != 'A'
             field->value := AllTrim(cast(oElement:get_value(), 'C'))
@@ -600,10 +610,12 @@ METHOD save_form() CLASS Creator
         field->is_ID := oElement:is_variable_id()
 
         IF field->is_ID
+            field->begin_name := 'Variable'
             field->method := Config():get_config('SaveAsVariable')
             field->name := ::set_distinct_name(oElement:get_name(), hJson) 
             hJson[RTrim(field->name)] := oElement:get_value()
         ELSE
+            field->begin_name := oElement:get_name()
             field->method := Config():get_config('SaveAsConstant')
         ENDIF
     NEXT
@@ -633,7 +645,7 @@ METHOD save_form() CLASS Creator
         GO TOP
 
         DO WHILE !EoF()
-            IF field->is_ID 
+            IF field->method == cVariable
                 cString += Creator():aoVariables[RecNo()]:to_string(.T., field->name)
             ELSE
                 cString += Creator():aoVariables[RecNo()]:to_string(.F.)
@@ -644,7 +656,7 @@ METHOD save_form() CLASS Creator
             SKIP
         ENDDO
 
-        dbForms->code += Left(cString, Len(cString) - 1) + OBJECT_SEPARATOR
+        dbForms->code += IF(Empty(dbForms->code), '', OBJECT_SEPARATOR) + Left(cString, Len(cString) - 1)
         dbVariables->json := hb_JsonEncode(hJson, .T.)
         COMMIT
     ENDIF
@@ -701,35 +713,36 @@ METHOD display_form() CLASS Creator
         ENDIF
     ENDIF
 
-    Parser():log('')
     lSuccess := Parser():prepare_form_from_record(hb_ATokens(cString, OBJECT_SEPARATOR), hJson)
 
     IF !lSuccess
-        Inform(Parser():log())
+        Inform(Parser():log(''))
     ENDIF
 
 RETURN lSuccess
 
-METHOD form_fast_edit(cScreen) CLASS Creator
+METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen) CLASS Creator
 
     MEMVAR GETLIST
 
     LOCAL cOldHeader := Window():header(Config():get_config('FormFastEditHeader'))
-    LOCAL cOldFooter := Window():footer(Config():get_config('FormFastEditFooter'))
+    LOCAL cOldFooter := Window():footer(Config():get_config('MenuDefaultFooter'))
+    LOCAL nOldWindow := WSelect()
     LOCAL aoWasVariables := clone_objects_array(Creator():aoVariables)
     LOCAL acMenuItems := Array(Len(Creator():aoVariables))
     LOCAL nChooseLoop := 1
     LOCAL lUpdated := .F.
     LOCAL lBrokenForm := .F.
-    LOCAL nOldWindow
     LOCAL lWasDropdown
     LOCAL nChooseMenu
     LOCAL i
 
-    RESTORE SCREEN FROM cScreen
-
+    WSelect(0)
     Window():refresh_header()
     Window():refresh_footer()
+    RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
+    WSelect(nOldWindow)
+    WMove(WRow(), WCol())
 
     ::display_form()
 
@@ -747,7 +760,7 @@ METHOD form_fast_edit(cScreen) CLASS Creator
         NEXT
 
         nChooseMenu := display_menu_center_autosize(Int(Window():center_row()), Int(Window():center_col()), acMenuItems, .T.;
-                                               , 'menu_search_allow_exit', 1, Config():get_config('DefaultColor');
+                                               , 'menu_search_allow_exit_move', 1, Config():get_config('DefaultColor');
                                                , Config():get_config('DefaultBox');
                                                )
 
@@ -760,15 +773,16 @@ METHOD form_fast_edit(cScreen) CLASS Creator
                 nChooseLoop := IF(YesNo(Config():get_config('YesNoBreakEdition')), 0, 1)
             ENDIF
         ELSE
-            lUpdated := Creator():aoVariables[nChooseMenu]:edit(Window():get_bottom(), Window():get_left())
+            lUpdated := Creator():aoVariables[nChooseMenu]:edit()
 
             IF Creator():cType == OBJECT_WINDOW
-                nOldWindow := WSelect()
                 WSelect(0)
-                RESTORE SCREEN FROM cScreen
+                RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
                 WSelect(nOldWindow)
             ELSE
-                RESTORE SCREEN FROM cScreen
+                WSelect(0)
+                RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
+                WSelect(nOldWindow)
             ENDIF
 
             IF Creator():cType == OBJECT_LISTBOX
@@ -808,6 +822,7 @@ METHOD form_fast_edit(cScreen) CLASS Creator
     Window():footer(cOldFooter)
     Window():refresh_header()
     Window():refresh_footer()
+    WMove(WRow(), WCol())
 
 RETURN NIL
 

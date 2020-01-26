@@ -15,7 +15,6 @@ FUNCTION create_initial_config_hash()
                             , 'DisplayFormFooter', 'Press any key to quit the preview';
                             , 'ReorderDisplayForm', 'ALT+ENTER - READ  another key - quit';
                             , 'CreateNewFormFooter', "Enter the form's unique language and ID";
-                            , 'AddToFormFooter', 'Select any item from the list';
                             , 'ChangeIDFooter', "Enter the form's unique language and/or ID";
                             , 'CloneFooter', "Enter the form's unique language and/or ID";
                             , 'ReorderFooter', 'ESC - quit  DEL - delete  F3 - change  F4 - edit  F5 - move  F6 - preview line  F7 - preview form  F8 - move down  F9 - move up';
@@ -26,7 +25,7 @@ FUNCTION create_initial_config_hash()
                             , 'CreatorCheckboxFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorListboxFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+Z - expan the list  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorRadiogroupFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+ENTER - READ  ESC - quit"; 
-                            , 'FormFastEditFooter', 'Select the item to edit and follow the instructions';
+                            , 'MenuDefaultFooter', 'Select the item';
                             , 'SaveFooter', 'SPACE - change the save method  ENTER - change the variable name';
                             ;/*** HEADERS ***/
                             , 'ProgramFirstHeader', 'Welcome back! Select the action you are interested in';
@@ -50,6 +49,8 @@ FUNCTION create_initial_config_hash()
                             , 'ReorderRowBrowseTitle', ' Reorder ';
                             , 'SaveTitle', ' Save the form ';
                             ;/*** DIALOGS ***/
+                            , 'NoVariableFileDialog', "There isn't the variable file. Create it?";
+                            , 'NoVariableFileInform', "There isn't the variable file. The program is going to be closed";
                             , 'InitFilesFailure', 'Files initialization failed!';
                             , 'InitConfigFailure', 'Configuration initialization failed!';
                             , 'QuitQuestion', 'Are you sure to quit?';
@@ -115,7 +116,8 @@ FUNCTION create_initial_config_hash()
                             , 'Language', 'ENGLISH';
                             , 'CantCreateEmptyForm', "The form's ID and the form's language can't be empty!";
                             , 'CriticalError', 'Critical error! Program is going to be closed!';
-                            , 'ImportantForm', "The selected form is crucial for the program. It's deleting may cause irreparable damage. Backup is recommended. Continue anyway?";
+                            , 'ImportantForm', "The selected form is crucial for the program. It's modification or deletion may cause irreparable damage. Backup is recommended. Continue anyway?";
+                            , 'Found', 'Found: ';
                             )
 RETURN hConfig
 
@@ -136,15 +138,15 @@ FUNCTION row_browse_main_search(oRowBrowse, nKey)
         oRowBrowse:print_title()
 
         IF Len(cCurrentString) > 0
-            @ oRowBrowse:bottom(), oRowBrowse:left() SAY 'Found: ' + cCurrentString
+            @ oRowBrowse:bottom(), oRowBrowse:left() SAY Config():get_config('Found') + cCurrentString
         ENDIF
     ELSE
-        IF oRowBrowse:search(cCurrentString + Chr(nKey))
+        IF oRowBrowse:search(cCurrentString + Upper(Chr(nKey)))
             nReturn := ROWBROWSE_SEARCH
-            oRowBrowse:search_keys(cCurrentString + Chr(nKey))
+            oRowBrowse:search_keys(cCurrentString + Upper(Chr(nKey)))
             oRowBrowse:draw_border()
             oRowBrowse:print_title()
-            @ oRowBrowse:bottom(), oRowBrowse:left() SAY 'Found: ' + cCurrentString + Chr(nKey)
+            @ oRowBrowse:bottom(), oRowBrowse:left() SAY Config():get_config('Found') + cCurrentString + Upper(Chr(nKey))
         ELSE
             GO nOldRecNo
         ENDIF

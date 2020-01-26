@@ -24,29 +24,67 @@ METHOD edit_form() CLASS Creator_listbox
 
     LOCAL cOldHeader := Window():header(Config():get_config('CreatorListboxHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('CreatorListboxFooter'))
+    LOCAL nOldWindow := WSelect()
     LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), 0)
     LOCAL nLeftLimit := IF(WSelect() == 0, Window():get_left(), 0)
     LOCAL nBottomLimit := IF(WSelect() == 0, Window():get_bottom(), MaxRow())
     LOCAL nRightLimit := IF(WSelect() == 0, Window():get_right(), MaxCol())
     LOCAL lActiveUpperLeftCorner := .T.
     LOCAL lFinish := .F.
+    LOCAL nTop := WRow()
+    LOCAL nLeft := WCol()
+    LOCAL nBottom := WLastRow()
+    LOCAL nRight := WLastCol()
+    LOCAL lSave := .F.
     LOCAL aoWasGetList
-    LOCAL lSave 
     LOCAL cScreen
     LOCAL nKey
 
-    Window():refresh_header()
-    Window():refresh_footer()
+    IF WSelect() > 0
+        WSelect(0)
+        cScreen := SaveScreen(nTop, nLeft, nBottom, nRight)
+        WSelect(nOldWindow)
 
-    SAVE SCREEN TO cScreen
+        Window():refresh_header()
+        Window():refresh_footer()
 
-    ::set_type(OBJECT_LISTBOX)
-    ::make_form_array()
+        WClose()
+    ELSE
+        Window():refresh_header()
+        Window():refresh_footer()
+
+        CLEAR GETS
+
+        IF !prepare_form()
+            lFinish := .T.
+            Inform(Parser():log(''))
+        ELSE
+            SAVE SCREEN TO cScreen
+        ENDIF
+    ENDIF
+
+    IF !lFinish
+        ::set_type(OBJECT_LISTBOX)
+        CLEAR GETS
+
+        IF !prepare_form()
+            lFinish := .T.
+            Inform(Parser():log(''))
+        ELSE
+            ::make_form_array()
+        ENDIF
+    ENDIF
 
     DO WHILE !lFinish
 
-        RESTORE SCREEN FROM cScreen 
-    
+        IF WSelect() > 0
+            WSelect(0)
+            RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
+            WSelect(nOldWindow)
+        ELSE
+            RESTORE SCREEN FROM cScreen
+        ENDIF
+
         ::display_form()
 
         IF ::lDropdownListbox
@@ -109,7 +147,7 @@ METHOD edit_form() CLASS Creator_listbox
                     ENDIF
                 ENDIF
             CASE nKey == K_ENTER
-                ::form_fast_edit(cScreen)
+                ::form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen)
             CASE nKey == K_ALT_ENTER
                 IF YesNo(Config():get_config('DoReadOrder'))
                     ReadModal(aoWasGetList)
@@ -120,13 +158,9 @@ METHOD edit_form() CLASS Creator_listbox
                         IF ::save_form()
                             lFinish := .T.
                             lSave := .T.
-                        ELSE
-                            lFinish := .F.
-                            lSave := .F.
                         ENDIF
                     ELSE 
                         lFinish := .T.
-                        lSave := .F.
                     ENDIF
                 ENDIF
         ENDCASE
