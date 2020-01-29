@@ -18,7 +18,7 @@ METHOD edit_form() CLASS Creator_box
     LOCAL cOldHeader := Window():header(Config():get_config('CreatorBoxHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('CreatorBoxFooter'))
     LOCAL nOldWindow := WSelect()
-    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), 0)
+    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), -1)
     LOCAL nLeftLimit := IF(WSelect() == 0, Window():get_left(), 0)
     LOCAL nBottomLimit := IF(WSelect() == 0, Window():get_bottom(), MaxRow())
     LOCAL nRightLimit := IF(WSelect() == 0, Window():get_right(), MaxCol())

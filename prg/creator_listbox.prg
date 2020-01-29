@@ -25,7 +25,7 @@ METHOD edit_form() CLASS Creator_listbox
     LOCAL cOldHeader := Window():header(Config():get_config('CreatorListboxHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('CreatorListboxFooter'))
     LOCAL nOldWindow := WSelect()
-    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), 0)
+    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), -1)
     LOCAL nLeftLimit := IF(WSelect() == 0, Window():get_left(), 0)
     LOCAL nBottomLimit := IF(WSelect() == 0, Window():get_bottom(), MaxRow())
     LOCAL nRightLimit := IF(WSelect() == 0, Window():get_right(), MaxCol())

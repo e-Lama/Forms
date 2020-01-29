@@ -13,6 +13,8 @@
 #define BOTTOM_POSITION Window():get_bottom() - 2
 #define RIGHT_POSITION Window():get_right() - 2
 
+#define LISTBOX_ELEMENTS {'1', '2', '3', '4'}
+
 CLASS Creator MODULE FRIENDLY
 
 EXPORTED:
@@ -350,13 +352,13 @@ METHOD make_form_array() CLASS Creator
                                                     );
                                     , Variable():new(::set_distinct_name('Variable', hJson);
                                                     , .T.;
-                                                    , {'Variable', 1};
+                                                    , {LISTBOX_ELEMENTS[2], 1};
                                                     , {'C', 'N'};
                                                     , {{|| .T.}, {|| .T.}};
                                                     );
                                     , Variable():new('List';
                                                     , .F.;
-                                                    , {{'El1', 'El2', 'El3', 'El4'}};
+                                                    , {LISTBOX_ELEMENTS};
                                                     , {'A'};
                                                     , {{| xValue | Alert(xValue), .T.}};
                                                     , .T.;

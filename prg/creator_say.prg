@@ -18,7 +18,7 @@ METHOD edit_form() CLASS Creator_say
     LOCAL cOldHeader := Window():header(Config():get_config('CreatorSayHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('CreatorSayFooter'))
     LOCAL nOldWindow := WSelect()
-    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), 0)
+    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), -1)
     LOCAL nLeftLimit := IF(WSelect() == 0, Window():get_left(), 0)
     LOCAL nBottomLimit := IF(WSelect() == 0, Window():get_bottom(), MaxRow())
     LOCAL nRightLimit := IF(WSelect() == 0, Window():get_right(), MaxCol())
