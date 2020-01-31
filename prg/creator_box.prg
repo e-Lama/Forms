@@ -7,11 +7,11 @@ CLASS Creator_box INHERIT Creator
 
 EXPORTED:
 
-    METHOD edit_form()
+    METHOD edit_form(xFormCode, xGetPos)
 
 ENDCLASS LOCK
 
-METHOD edit_form() CLASS Creator_box
+METHOD edit_form(xFormCode, xGetPos) CLASS Creator_box
 
     MEMVAR GETLIST
 
@@ -47,10 +47,14 @@ METHOD edit_form() CLASS Creator_box
 
         CLEAR GETS
 
-        IF !prepare_form()
+        IF ValType(xFormCode) == 'A'
+            SAVE SCREEN TO cScreen
+        ENDIF
+
+        IF !prepare_form(xFormCode)
             lFinish := .T.
             Inform(Parser():log(''))
-        ELSE
+        ELSEIF ValType(xFormCode) != 'A'
             SAVE SCREEN TO cScreen
         ENDIF
     ENDIF
@@ -59,26 +63,41 @@ METHOD edit_form() CLASS Creator_box
         ::set_type(OBJECT_BOX)
         CLEAR GETS
 
-        IF !prepare_form()
+        IF !prepare_form(xFormCode)
             lFinish := .T.
             Inform(Parser():log(''))
         ELSE
-            ::make_form_array()
+            ::make_form_array(xFormCode)
         ENDIF
     ENDIF
 
     DO WHILE !lFinish
 
-        IF WSelect() > 0
-            WSelect(0)
-            RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
-            WSelect(nOldWindow)
+        IF Alias() == 'DBREORDER'
+    
+            CLEAR GETS
+
+            IF WSelect() > 0
+                WClose()
+            ELSE
+                RESTORE SCREEN FROM cScreen
+            ENDIF
+
+            prepare_form(ACopy(xFormCode, Array(Val(field->line_nr) - 1), 1, Val(field->line_nr) - 1))
+            ::display_form()
+            prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - Val(field->line_nr)), Val(field->line_nr) + 1))
         ELSE
-            RESTORE SCREEN FROM cScreen
+            IF WSelect() > 0
+                WSelect(0)
+                RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
+                WSelect(nOldWindow)
+            ELSE
+                RESTORE SCREEN FROM cScreen
+            ENDIF
+
+            ::display_form()
         ENDIF
 
-        ::display_form()
-        
         nKey := Inkey(0)
 
         DO CASE
@@ -125,7 +144,7 @@ METHOD edit_form() CLASS Creator_box
                     ENDIF
                 ENDIF
             CASE nKey == K_ENTER
-                ::form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen)
+                ::form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
             CASE nKey == K_ALT_ENTER
                 IF YesNo(Config():get_config('DoReadOrder'))
                     ReadModal(GETLIST)

@@ -9,7 +9,7 @@ CLASS Creator_listbox INHERIT Creator
 
 EXPORTED:
 
-    METHOD edit_form()
+    METHOD edit_form(xFormCode, xGetPos)
     METHOD dropdown(lDropdown) SETGET
 
 HIDDEN:
@@ -18,7 +18,7 @@ HIDDEN:
 
 ENDCLASS LOCK
 
-METHOD edit_form() CLASS Creator_listbox
+METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
 
     MEMVAR GETLIST
 
@@ -40,7 +40,7 @@ METHOD edit_form() CLASS Creator_listbox
     LOCAL cScreen
     LOCAL nKey
 
-    IF WSelect() > 0
+    IF nOldWindow > 0
         WSelect(0)
         cScreen := SaveScreen(nTop, nLeft, nBottom, nRight)
         WSelect(nOldWindow)
@@ -55,10 +55,14 @@ METHOD edit_form() CLASS Creator_listbox
 
         CLEAR GETS
 
-        IF !prepare_form()
+        IF ValType(xFormCode) == 'A'
+            SAVE SCREEN TO cScreen
+        ENDIF
+
+        IF !prepare_form(xFormCode)
             lFinish := .T.
             Inform(Parser():log(''))
-        ELSE
+        ELSEIF ValType(xFormCode) != 'A'
             SAVE SCREEN TO cScreen
         ENDIF
     ENDIF
@@ -67,32 +71,60 @@ METHOD edit_form() CLASS Creator_listbox
         ::set_type(OBJECT_LISTBOX)
         CLEAR GETS
 
-        IF !prepare_form()
+        IF !prepare_form(xFormCode)
             lFinish := .T.
             Inform(Parser():log(''))
         ELSE
-            ::make_form_array()
+            ::make_form_array(xFormCode)
+
+            IF Alias() == 'DBREORDER'
+                GETLIST[xGetPos] := __objClone(ATail(GETLIST))
+                GETLIST := ASize(GETLIST, Len(GETLIST) - 1)
+            ENDIF
         ENDIF
     ENDIF
 
     DO WHILE !lFinish
 
-        IF WSelect() > 0
-            WSelect(0)
-            RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
-            WSelect(nOldWindow)
+        IF Alias() == 'DBREORDER'
+            
+            CLEAR GETS
+
+            IF WSelect() > 0
+                WClose()
+            ELSE
+                RESTORE SCREEN FROM cScreen
+            ENDIF
+
+            prepare_form(ACopy(xFormCode, Array(Val(field->line_nr) - 1), 1, Val(field->line_nr) - 1))
+            ::display_form()
+            prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - Val(field->line_nr)), Val(field->line_nr) + 1))
         ELSE
-            RESTORE SCREEN FROM cScreen
+            IF WSelect() > 0
+                WSelect(0)
+                RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
+                WSelect(nOldWindow)
+            ELSE
+                RESTORE SCREEN FROM cScreen
+            ENDIF
+
+            ::display_form()
         ENDIF
 
-        ::display_form()
-
         IF ::lDropdownListbox
-            GETLIST[Len(GETLIST)][LISTBOX_SLOT]:open()
+            IF ALias() == 'DBREORDER'
+                GETLIST[xGetPos][LISTBOX_SLOT]:open()
+            ELSE
+                GETLIST[Len(GETLIST)][LISTBOX_SLOT]:open()
+            ENDIF
         ENDIF
 
         IF ValType(aoWasGetList) == 'A' .AND. Len(aoWasGetList) != 0 .AND. Len(GETLIST) != 0
-            aoWasGetList[Len(aoWasGetList)] := __objClone(GETLIST[Len(GETLIST)])
+            IF ValType(xFormCode) == 'A'
+                aoWasGetList[xGetPos] := __objClone(GETLIST[xGetPos])//__objClone(ATail(GETLIST))
+            ELSE
+                aoWasGetList[Len(aoWasGetList)] := __objClone(ATail(GETLIST))
+            ENDIF
         ELSE
             aoWasGetList := clone_objects_array(GETLIST)
         ENDIF

@@ -7,11 +7,11 @@ CLASS Creator_window INHERIT Creator
 
 EXPORTED:
 
-    METHOD edit_form()
+    METHOD edit_form(xFormCode, xGetPos)
 
 ENDCLASS LOCK
 
-METHOD edit_form() CLASS Creator_window
+METHOD edit_form(xFormCode, xGetPos) CLASS Creator_window
 
     MEMVAR GETLIST
 
@@ -21,17 +21,35 @@ METHOD edit_form() CLASS Creator_window
     LOCAL lFinish := .F.
     LOCAL lSave := .F.
     LOCAL nOldWindow
+    LOCAL xFormCodeWithoutWindow
     LOCAL cScreen
     LOCAL nKey
+
+    IF PCount() != 0
+        WClose()
+        CLEAR GETS
+    ENDIF
 
     Window():refresh_header()
     Window():refresh_footer()
 
     SAVE SCREEN TO cScreen
 
-    ::set_type(OBJECT_WINDOW)
     ::clear_window_flag()
-    ::make_form_array()
+    ::set_type(OBJECT_WINDOW)
+
+    IF PCount() != 0
+        xFormCodeWithoutWindow := hb_ADel(AClone(xFormCode), 1, .T.)
+
+        IF !prepare_form(xFormCodeWithoutWindow)
+            lFinish := .T.
+            Inform(Parser():log(''))
+        ELSE
+            ::make_form_array(xFormCode)
+        ENDIF
+    ELSE
+        ::make_form_array()
+    ENDIF
 
     DO WHILE !lFinish
 
@@ -41,6 +59,16 @@ METHOD edit_form() CLASS Creator_window
         WSelect(nOldWindow)
 
         ::display_form()
+
+        IF PCount() != 0
+
+            CLEAR GETS
+
+            IF !prepare_form(xFormCodeWithoutWindow)
+                Inform(Parser():log(''))
+            ENDIF
+
+        ENDIF
 
         nKey := Inkey(0)
 
@@ -88,7 +116,11 @@ METHOD edit_form() CLASS Creator_window
                     ENDIF
                 ENDIF
             CASE nKey == K_ENTER
-                ::form_fast_edit(WRow(), WCol(), WLastRow(), WLastCol(), cScreen)
+                ::form_fast_edit(WRow(), WCol(), WLastRow(), WLastCol(), cScreen, xFormCodeWithoutWindow, xGetPos)
+            CASE nKey == K_ALT_ENTER
+                IF YesNo(Config():get_config('DoReadOrder'))
+                    ReadModal(GETLIST)
+                ENDIF
             CASE nKey == K_ESC
                 IF YesNo(Config():get_config('YesNoBreakEdition'))
                     IF YesNo(Config():get_config('YesNoSave'))

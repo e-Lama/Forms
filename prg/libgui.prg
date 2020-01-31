@@ -17,13 +17,13 @@ FUNCTION create_initial_config_hash()
                             , 'CreateNewFormFooter', "Enter the form's unique language and ID";
                             , 'ChangeIDFooter', "Enter the form's unique language and/or ID";
                             , 'CloneFooter', "Enter the form's unique language and/or ID";
-                            , 'ReorderFooter', 'ESC - quit  DEL - delete  F3 - change  F4 - edit  F5 - move  F6 - preview line  F7 - preview form  F8 - move down  F9 - move up';
-                            , 'CreatorWindowFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ESC - quit"; 
+                            , 'ReorderFooter', 'ESC - quit  DEL - delete  F2 - rebuild  F3 - change  F4 - edit  F5 - move  F6 - preview line  F7 - preview form  F8 - move down  F9 - move up';
+                            , 'CreatorWindowFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorBoxFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorSayFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorGetFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorCheckboxFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+ENTER - READ  ESC - quit"; 
-                            , 'CreatorListboxFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+Z - expan the list  ALT+ENTER - READ  ESC - quit"; 
+                            , 'CreatorListboxFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+Z - expand the list  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorRadiogroupFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+ENTER - READ  ESC - quit"; 
                             , 'MenuDefaultFooter', 'Select the item';
                             , 'SaveFooter', 'SPACE - change the save method  ENTER - change the variable name';
@@ -74,7 +74,7 @@ FUNCTION create_initial_config_hash()
                             , 'FromBoth', 'Yes, from both sides';
                             , 'SaveVariableEditing', 'Should I finish the edition and save all changes?';
                             , 'ChangeVariableValue', 'Should I change the value of the variable?';
-                            , 'IncorrectValueVariable', 'Incorrect value of the variable;Break the edition?';
+                            , 'IncorrectValueVariable', 'Incorrect value of the variable';
                             , 'ChangeVariableDataType', 'Should I change the type of the variable?';
                             , 'DistinctNameFirstPart', 'Name ';
                             , 'DistinctNameSecondPart', ' is in use. Choose another one.';

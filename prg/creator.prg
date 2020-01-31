@@ -2,9 +2,9 @@
 #include "inkey.ch"
 
 #include "rowbrowse.ch"
+#include "functions.ch"
 
 #include "creator.ch"
-#include "functions.ch"
 #include "variables.ch"
 
 #define LISTBOX_SLOT 11
@@ -19,13 +19,13 @@ CLASS Creator MODULE FRIENDLY
 
 EXPORTED:
 
-    METHOD edit_form() VIRTUAL
+    METHOD edit_form(xFormCode, xGetPos) VIRTUAL
 
 PROTECTED:
 
-    METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen) 
+    METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos) 
     METHOD display_form()
-    METHOD make_form_array()
+    METHOD make_form_array(xCode)
     METHOD save_form()
     METHOD increment(nVariable) INLINE ++Creator():aoVariables[nVariable]
     METHOD decrement(nVariable) INLINE --Creator():aoVariables[nVariable]
@@ -35,6 +35,19 @@ PROTECTED:
     METHOD clear_window_flag() INLINE Creator():lIsWindow := .F.
     METHOD set_distinct_name(cName, hJson)
 
+    METHOD is_variable(acForm, nIndex) INLINE SubStr(acForm[nIndex], 1, 1) == VARIABLE 
+    METHOD extract_type(acForm, nIndex) INLINE SubStr(acForm[nIndex], 2, 1)
+    METHOD extract_value(acForm, nIndex, hJson) INLINE IF(::is_variable(acForm, nIndex), hJson[::extract_name(acForm, nIndex)], cast(SubStr(acForm[nIndex], 3), ::extract_type(acForm, nIndex)))
+    METHOD extract_name(acForm, nIndex) INLINE RTrim(SubStr(acForm[nIndex], 3))
+
+    METHOD create_window_form_shadow(acForm, nIndex, hJson)
+    METHOD create_say_get_form_expression(acForm, nIndex, hJson)
+    METHOD create_get_form_variable(acForm, nIndex, hJson)
+    METHOD create_listbox_radiogroup_form_variable(acForm, nIndex, hJson)
+
+    METHOD validate_listbox_list(xList)
+    METHOD validate_radiogroup_group(xGroup)
+
 HIDDEN:
 
     CLASSVAR aoVariables AS ARRAY INIT Array(0)
@@ -43,472 +56,986 @@ HIDDEN:
 
 ENDCLASS LOCK 
 
-METHOD make_form_array() CLASS Creator
+METHOD make_form_array(xCode) CLASS Creator
 
     LOCAL hJson := hb_JsonDecode(dbVariables->json)
+    LOCAL acForm
 
     IF ValType(hJson) != 'H'
         hJson := hb_Hash()
     ENDIF
 
-    DO CASE
-        CASE Creator():cType == OBJECT_WINDOW
-            Creator():aoVariables := {Variable():new('Top';
-                                                    , .F.;
-                                                    , {TOP_POSITION};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= Window():get_top() .AND. Val(oGet:buffer) <= Window():get_bottom()}};
-                                                    );
-                                    , Variable():new('Left';
-                                                    , .F.;
-                                                    , {LEFT_POSITION};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= Window():get_left()  .AND. Val(oGet:buffer) <= Window():get_right()}};
-                                                    );
-                                    , Variable():new('Bottom';
-                                                    , .F.;
-                                                    , {BOTTOM_POSITION};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= Window():get_top() .AND. Val(oGet:buffer) <= Window():get_bottom()}};
-                                                    );
-                                    , Variable():new('Right';
-                                                    , .F.;
-                                                    , {RIGHT_POSITION};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= Window():get_left() .AND. Val(oGet:buffer) <= Window():get_right()}};
-                                                    );
-                                    , Variable():new('Box';
-                                                    , .F.;
-                                                    , {Config():get_config('DefaultWindowCreatorBox')};
-                                                    , {'C'};
-                                                    , {{| oGet | is_box(AllTrim(oGet:buffer))}};
-                                                    );
-                                    , Variable():new('Color';
-                                                    , .F.;
-                                                    , {Config():get_config('DefaultWindowCreatorColor')};
-                                                    , {'C'};
-                                                    , {{| oGet | is_color(oGet:buffer, .T.)}};
-                                                    , .T.;
-                                                    );
-                                     , Variable():new('Shadow';
-                                                    , .F.;
-                                                    , {Config():get_config('DefaultWindowCreatorShadow'), -1};
-                                                    , {'C', 'N'};
-                                                    , {{| oGet | AScan({'N', 'B', 'G', 'BG', 'R', 'RB', 'GR', 'W', 'N+', 'B+', 'G+', 'BG+', 'R+', 'RB+', 'GR+', 'W+'}, oGet:buffer) > 0 }, {| oGet | Val(oGet:buffer) == -1}};
-                                                    , .T.;
-                                                    );
-                                    }
-        CASE Creator():cType == OBJECT_BOX
-            Creator():aoVariables := {Variable():new('Top';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, TOP_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
-                                                    );
-                                    , Variable():new('Left';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, LEFT_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
-                                                    );
-                                    , Variable():new('Bottom';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, BOTTOM_POSITION, MaxRow())};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
-                                                    );
-                                    , Variable():new('Right';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, RIGHT_POSITION, MaxCol())};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
-                                                    );
-                                    , Variable():new('Box';
-                                                    , .F.;
-                                                    , {Config():get_config('DefaultBoxCreatorBox')};
-                                                    , {'C'};
-                                                    , {{| oGet | is_box(AllTrim(oGet:buffer))}};
-                                                    );
-                                    , Variable():new('Color';
-                                                    , .F.;
-                                                    , {Config():get_config('DefaultBoxCreatorColor')};
-                                                    , {'C'};
-                                                    , {{| oGet | is_color(oGet:buffer, .T.)}};
-                                                    , .T.;
-                                                    );
-                                    }
-        CASE Creator():cType == OBJECT_SAY 
-            Creator():aoVariables := {Variable():new('Row';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, TOP_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
-                                                    );
-                                    , Variable():new('Column';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, LEFT_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
-                                                    );
-                                    , Variable():new('Expression';
-                                                    , .F.;
-                                                    , {'Expression', 3.14, Date(), .T.};
-                                                    , {'C', 'N', 'D', 'L'};
-                                                    , {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
-                                                    );
-                                    , Variable():new('Picture';
-                                                    , .F.;
-                                                    , {'@! AAAAAAAAAA'};
-                                                    , {'C'};
-                                                    , {{| oGet | is_picture(RTrim(oGet:buffer))}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Color';
-                                                    , .F.;
-                                                    , {Config():get_config('DefaultSayCreatorColor')};
-                                                    , {'C'};
-                                                    , {{| oGet | is_color(oGet:buffer, .T.)}};
-                                                    , .T.;
-                                                    );
-                                    }
-        CASE Creator():cType == OBJECT_GET
-            Creator():aoVariables := {Variable():new('Row';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, TOP_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
-                                                    );
-                                    , Variable():new('Column';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, LEFT_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
-                                                    );
-                                    , Variable():new('Expression';
-                                                    , .F.;
-                                                    , {'Expression', 3.14, Date(), .T.};
-                                                    , {'C', 'N', 'D', 'L'};
-                                                    , {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
-                                                    );
-                                    , Variable():new('Say picture';
-                                                    , .F.;
-                                                    , {'@! AAAAAAAAAA'};
-                                                    , {'C'};
-                                                    , {{| oGet | is_picture(RTrim(oGet:buffer))}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Say color';
-                                                    , .F.;
-                                                    , {Config():get_config('DefaultGetSayCreatorColor')};
-                                                    , {'C'};
-                                                    , {{| oGet | is_color(oGet:buffer, .T.)}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new(::set_distinct_name('Variable', hJson);
-                                                    , .T.;
-                                                    , {'Variable', 2.78, d"1991-01-01", .F.};
-                                                    , {'C', 'N', 'D', 'L'};
-                                                    , {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
-                                                    );
-                                    , Variable():new('Get picture';
-                                                    , .F.;
-                                                    , {'@! AAAAAAAAAA'};
-                                                    , {'C'};
-                                                    , {{| oGet | is_picture(RTrim(oGet:buffer))}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Get color';
-                                                    , .F.;
-                                                    , {Config():get_config('DefaultGetGetCreatorColor')};
-                                                    , {'C'};
-                                                    , {{| oGet | is_color(oGet:buffer, .T.)}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Caption';
-                                                    , .F.;
-                                                    , {'Caption'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    );
-                                    , Variable():new('Message';
-                                                    , .F.;
-                                                    , {'Message'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    );
-                                    , Variable():new('When';
-                                                    , .F.;
-                                                    , {'{|| True()}'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Valid';
-                                                    , .F.;
-                                                    , {'{|| True()}'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    }
-        CASE Creator():cType == OBJECT_CHECKBOX
-            Creator():aoVariables := {Variable():new('Row';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, TOP_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
-                                                    );
-                                    , Variable():new('Column';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, LEFT_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
-                                                    );
-                                    , Variable():new(::set_distinct_name('Variable', hJson);
-                                                    , .T.;
-                                                    , {.F.};
-                                                    , {'L'};
-                                                    , {{|| .T.}};
-                                                    );
-                                    , Variable():new('Caption';
-                                                    , .F.;
-                                                    , {'Caption'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    );
-                                    , Variable():new('Message';
-                                                    , .F.;
-                                                    , {'Message'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    );
-                                    , Variable():new('When';
-                                                    , .F.;
-                                                    , {'{|| True()}'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Valid';
-                                                    , .F.;
-                                                    , {'{|| True()}'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Color';
-                                                    , .F.;
-                                                    , {Config():get_config('DefaultCheckboxCreatorColor')};
-                                                    , {'C'};
-                                                    , {{| oGet | is_color(oGet:buffer, .T.) .AND. !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 3)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 4))}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Focus';
-                                                    , .F.;
-                                                    , {'True()'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('State';
-                                                    , .F.;
-                                                    , {'True()'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Style';
-                                                    , .F.;
-                                                    , {'[X ]'};
-                                                    , {'C'};
-                                                    , {{| oGet | is_style(RTrim(oGet:buffer))}};
-                                                    , .T.;
-                                                    );
-                                    }
-        CASE Creator():cType == OBJECT_LISTBOX
-                   Creator():aoVariables := {Variable():new('Top';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, TOP_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
-                                                    );
-                                    , Variable():new('Left';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, LEFT_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
-                                                    );
-                                    , Variable():new('Bottom';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, BOTTOM_POSITION, MaxRow())};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
-                                                    );
-                                    , Variable():new('Right';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, RIGHT_POSITION, MaxCol())};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
-                                                    );
-                                    , Variable():new(::set_distinct_name('Variable', hJson);
-                                                    , .T.;
-                                                    , {LISTBOX_ELEMENTS[2], 1};
-                                                    , {'C', 'N'};
-                                                    , {{|| .T.}, {|| .T.}};
-                                                    );
-                                    , Variable():new('List';
-                                                    , .F.;
-                                                    , {LISTBOX_ELEMENTS};
-                                                    , {'A'};
-                                                    , {{| xValue | Alert(xValue), .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Caption';
-                                                    , .F.;
-                                                    , {'Caption'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    );
-                                    , Variable():new('Message';
-                                                    , .F.;
-                                                    , {'Message'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    );
-                                    , Variable():new('When';
-                                                    , .F.;
-                                                    , {'{|| True()}'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Valid';
-                                                    , .F.;
-                                                    , {'{|| True()}'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Color';
-                                                    , .F.;
-                                                    , {Config():get_config('DefaultListboxCreatorColor')};
-                                                    , {'C'};
-                                                    , {{| oGet | is_color(oGet:buffer, .T.) .AND. IF(Creator_listbox():dropdown(), !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 7)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 8)), !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 6)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 7)))}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Focus';
-                                                    , .F.;
-                                                    , {'True()'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('State';
-                                                    , .F.;
-                                                    , {'True()'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Dropdown';
-                                                    , .F.;
-                                                    , {.F.};
-                                                    , {'L'};
-                                                    , {{|| .T.}};
-                                                    );
-                                    , Variable():new('Scrollbar';
-                                                    , .F.;
-                                                    , {.T.};
-                                                    , {'L'};
-                                                    , {{|| .T.}};
-                                                    );
-                                    }
-        CASE Creator():cType == OBJECT_RADIOGROUP
-                   Creator():aoVariables := {Variable():new('Top';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, TOP_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
-                                                    );
-                                    , Variable():new('Left';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, LEFT_POSITION, 0)};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
-                                                    );
-                                    , Variable():new('Bottom';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, BOTTOM_POSITION, MaxRow())};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
-                                                    );
-                                    , Variable():new('Right';
-                                                    , .F.;
-                                                    , {IF(WSelect() == 0, RIGHT_POSITION, MaxCol())};
-                                                    , {'N'};
-                                                    , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
-                                                    );
-                                    , Variable():new(::set_distinct_name('Variable', hJson);
-                                                    , .T.;
-                                                    , {'Variable', 1};
-                                                    , {'C', 'N'};
-                                                    , {{|| .T.}, {|| .T.}};
-                                                    );
-                                    , Variable():new('Group';
-                                                    , .F.;
-                                                    , {{'3,20,&Guzik,G', '4,15,Atam&guzik,A'}};
-                                                    , {'A'};
-                                                    , {{| xValue | Alert(xValue), .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Caption';
-                                                    , .F.;
-                                                    , {'Caption'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    );
-                                    , Variable():new('Message';
-                                                    , .F.;
-                                                    , {'Message'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    );
-                                    , Variable():new('Color';
-                                                    , .F.;
-                                                    , {Config():get_config('DefaultRadiogroupCreatorColor')};
-                                                    , {'C'};
-                                                    , {{| oGet | is_color(oGet:buffer, .T.) .AND. !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 2)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 3))}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Focus';
-                                                    , .F.;
-                                                    , {'True()'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('When';
-                                                    , .F.;
-                                                    , {'{|| True()}'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    , Variable():new('Valid';
-                                                    , .F.;
-                                                    , {'{|| True()}'};
-                                                    , {'C'};
-                                                    , {{|| .T.}};
-                                                    , .T.;
-                                                    );
-                                    }
-        OTHERWISE
-            throw(RUNTIME_EXCEPTION)
-    ENDCASE
+    IF PCount() == 0 .OR. ValType(xCode) != 'A'
+        DO CASE
+            CASE Creator():cType == OBJECT_WINDOW
+                Creator():aoVariables := {Variable():new('Top';
+                                                        , .F.;
+                                                        , {TOP_POSITION};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= Window():get_top() .AND. Val(oGet:buffer) <= Window():get_bottom()}};
+                                                        );
+                                        , Variable():new('Left';
+                                                        , .F.;
+                                                        , {LEFT_POSITION};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= Window():get_left()  .AND. Val(oGet:buffer) <= Window():get_right()}};
+                                                        );
+                                        , Variable():new('Bottom';
+                                                        , .F.;
+                                                        , {BOTTOM_POSITION};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= Window():get_top() .AND. Val(oGet:buffer) <= Window():get_bottom()}};
+                                                        );
+                                        , Variable():new('Right';
+                                                        , .F.;
+                                                        , {RIGHT_POSITION};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= Window():get_left() .AND. Val(oGet:buffer) <= Window():get_right()}};
+                                                        );
+                                        , Variable():new('Box';
+                                                        , .F.;
+                                                        , {Config():get_config('DefaultWindowCreatorBox')};
+                                                        , {'C'};
+                                                        , {{| oGet | is_box(AllTrim(oGet:buffer))}};
+                                                        );
+                                        , Variable():new('Color';
+                                                        , .F.;
+                                                        , {Config():get_config('DefaultWindowCreatorColor')};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.)}};
+                                                        , .T.;
+                                                        );
+                                         , Variable():new('Shadow';
+                                                        , .F.;
+                                                        , {Config():get_config('DefaultWindowCreatorShadow'), -1};
+                                                        , {'C', 'N'};
+                                                        , {{| oGet | AScan({'N', 'B', 'G', 'BG', 'R', 'RB', 'GR', 'W', 'N+', 'B+', 'G+', 'BG+', 'R+', 'RB+', 'GR+', 'W+'}, oGet:buffer) > 0 }, {| oGet | Val(oGet:buffer) == -1}};
+                                                        , .T.;
+                                                        );
+                                        }
+            CASE Creator():cType == OBJECT_BOX
+                Creator():aoVariables := {Variable():new('Top';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, TOP_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Left';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, LEFT_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new('Bottom';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, BOTTOM_POSITION, MaxRow())};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Right';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, RIGHT_POSITION, MaxCol())};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new('Box';
+                                                        , .F.;
+                                                        , {Config():get_config('DefaultBoxCreatorBox')};
+                                                        , {'C'};
+                                                        , {{| oGet | is_box(AllTrim(oGet:buffer))}};
+                                                        );
+                                        , Variable():new('Color';
+                                                        , .F.;
+                                                        , {Config():get_config('DefaultBoxCreatorColor')};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.)}};
+                                                        , .T.;
+                                                        );
+                                        }
+            CASE Creator():cType == OBJECT_SAY 
+                Creator():aoVariables := {Variable():new('Row';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, TOP_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Column';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, LEFT_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new('Expression';
+                                                        , .F.;
+                                                        , {'Expression', 3.14, Date(), .T.};
+                                                        , {'C', 'N', 'D', 'L'};
+                                                        , {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
+                                                        );
+                                        , Variable():new('Picture';
+                                                        , .F.;
+                                                        , {'@! AAAAAAAAAA'};
+                                                        , {'C'};
+                                                        , {{| oGet | is_picture(RTrim(oGet:buffer))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Color';
+                                                        , .F.;
+                                                        , {Config():get_config('DefaultSayCreatorColor')};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.)}};
+                                                        , .T.;
+                                                        );
+                                        }
+            CASE Creator():cType == OBJECT_GET
+                Creator():aoVariables := {Variable():new('Row';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, TOP_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Column';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, LEFT_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new('Expression';
+                                                        , .F.;
+                                                        , {'Expression', 3.14, Date(), .T.};
+                                                        , {'C', 'N', 'D', 'L'};
+                                                        , {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
+                                                        );
+                                        , Variable():new('Say picture';
+                                                        , .F.;
+                                                        , {'@! AAAAAAAAAA'};
+                                                        , {'C'};
+                                                        , {{| oGet | is_picture(RTrim(oGet:buffer))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Say color';
+                                                        , .F.;
+                                                        , {Config():get_config('DefaultGetSayCreatorColor')};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.)}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new(::set_distinct_name('Variable', hJson);
+                                                        , .T.;
+                                                        , {'Variable', 2.78, d"1991-01-01", .F.};
+                                                        , {'C', 'N', 'D', 'L'};
+                                                        , {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
+                                                        );
+                                        , Variable():new('Get picture';
+                                                        , .F.;
+                                                        , {'@! AAAAAAAAAA'};
+                                                        , {'C'};
+                                                        , {{| oGet | is_picture(RTrim(oGet:buffer))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Get color';
+                                                        , .F.;
+                                                        , {Config():get_config('DefaultGetGetCreatorColor')};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.)}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Caption';
+                                                        , .F.;
+                                                        , {'Caption'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Message';
+                                                        , .F.;
+                                                        , {'Message'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('When';
+                                                        , .F.;
+                                                        , {'{|| True()}'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Valid';
+                                                        , .F.;
+                                                        , {'{|| True()}'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        }
+            CASE Creator():cType == OBJECT_CHECKBOX
+                Creator():aoVariables := {Variable():new('Row';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, TOP_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Column';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, LEFT_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new(::set_distinct_name('Variable', hJson);
+                                                        , .T.;
+                                                        , {.F.};
+                                                        , {'L'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Caption';
+                                                        , .F.;
+                                                        , {'Caption'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Message';
+                                                        , .F.;
+                                                        , {'Message'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('When';
+                                                        , .F.;
+                                                        , {'{|| True()}'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Valid';
+                                                        , .F.;
+                                                        , {'{|| True()}'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Color';
+                                                        , .F.;
+                                                        , {Config():get_config('DefaultCheckboxCreatorColor')};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.) .AND. !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 3)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 4))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Focus';
+                                                        , .F.;
+                                                        , {'True()'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('State';
+                                                        , .F.;
+                                                        , {'True()'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Style';
+                                                        , .F.;
+                                                        , {'[X ]'};
+                                                        , {'C'};
+                                                        , {{| oGet | is_style(RTrim(oGet:buffer))}};
+                                                        , .T.;
+                                                        );
+                                        }
+            CASE Creator():cType == OBJECT_LISTBOX
+                       Creator():aoVariables := {Variable():new('Top';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, TOP_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Left';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, LEFT_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new('Bottom';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, BOTTOM_POSITION, MaxRow())};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Right';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, RIGHT_POSITION, MaxCol())};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new(::set_distinct_name('Variable', hJson);
+                                                        , .T.;
+                                                        , {LISTBOX_ELEMENTS[2], 1};
+                                                        , {'C', 'N'};
+                                                        , {{|| .T.}, {|| .T.}};
+                                                        );
+                                        , Variable():new('List';
+                                                        , .F.;
+                                                        , {LISTBOX_ELEMENTS};
+                                                        , {'A'};
+                                                        , {{| xValue | ::validate_listbox_list(xValue)}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Caption';
+                                                        , .F.;
+                                                        , {'Caption'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Message';
+                                                        , .F.;
+                                                        , {'Message'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('When';
+                                                        , .F.;
+                                                        , {'{|| True()}'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Valid';
+                                                        , .F.;
+                                                        , {'{|| True()}'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Color';
+                                                        , .F.;
+                                                        , {Config():get_config('DefaultListboxCreatorColor')};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.) .AND. IF(Creator_listbox():dropdown(), !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 7)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 8)), !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 6)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 7)))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Focus';
+                                                        , .F.;
+                                                        , {'True()'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('State';
+                                                        , .F.;
+                                                        , {'True()'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Dropdown';
+                                                        , .F.;
+                                                        , {.F.};
+                                                        , {'L'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Scrollbar';
+                                                        , .F.;
+                                                        , {.T.};
+                                                        , {'L'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        }
+            CASE Creator():cType == OBJECT_RADIOGROUP
+                       Creator():aoVariables := {Variable():new('Top';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, TOP_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Left';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, LEFT_POSITION, 0)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new('Bottom';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, BOTTOM_POSITION, MaxRow())};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Right';
+                                                        , .F.;
+                                                        , {IF(WSelect() == 0, RIGHT_POSITION, MaxCol())};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new(::set_distinct_name('Variable', hJson);
+                                                        , .T.;
+                                                        , {'Variable', 1};
+                                                        , {'C', 'N'};
+                                                        , {{|| .T.}, {|| .T.}};
+                                                        );
+                                        , Variable():new('Group';
+                                                        , .F.;
+                                                        , {{'3,20,&Guzik,G', '4,15,Atam&guzik,A'}};
+                                                        , {'A'};
+                                                        , {{| xValue | ::validate_radiogroup_group(xValue)}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Caption';
+                                                        , .F.;
+                                                        , {'Caption'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Message';
+                                                        , .F.;
+                                                        , {'Message'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Color';
+                                                        , .F.;
+                                                        , {Config():get_config('DefaultRadiogroupCreatorColor')};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.) .AND. !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 2)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 3))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Focus';
+                                                        , .F.;
+                                                        , {'True()'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('When';
+                                                        , .F.;
+                                                        , {'{|| True()}'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Valid';
+                                                        , .F.;
+                                                        , {'{|| True()}'};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        }
+            OTHERWISE
+                throw(RUNTIME_EXCEPTION)
+        ENDCASE
+    ELSE
+        acForm := hb_ATokens(xCode[Val(field->line_nr)], LINE_SEPARATOR)
+
+        DO CASE
+            CASE Creator():cType == OBJECT_WINDOW
+                Creator():aoVariables := {Variable():new('Top';
+                                                        , ::is_variable(acForm, 2);
+                                                        , {::extract_value(acForm, 2, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= Window():get_top() .AND. Val(oGet:buffer) <= Window():get_bottom()}};
+                                                        );
+                                        , Variable():new('Left';
+                                                        , ::is_variable(acForm, 3);
+                                                        , {::extract_value(acForm, 3, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= Window():get_left()  .AND. Val(oGet:buffer) <= Window():get_right()}};
+                                                        );
+                                        , Variable():new('Bottom';
+                                                        , ::is_variable(acForm, 4);
+                                                        , {::extract_value(acForm, 4, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= Window():get_top() .AND. Val(oGet:buffer) <= Window():get_bottom()}};
+                                                        );
+                                        , Variable():new('Right';
+                                                        , ::is_variable(acForm, 5);
+                                                        , {::extract_value(acForm, 5, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= Window():get_left() .AND. Val(oGet:buffer) <= Window():get_right()}};
+                                                        );
+                                        , Variable():new('Box';
+                                                        , ::is_variable(acForm, 6);
+                                                        , {::extract_value(acForm, 6, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_box(AllTrim(oGet:buffer))}};
+                                                        );
+                                        , Variable():new('Color';
+                                                        , ::is_variable(acForm, 7);
+                                                        , {::extract_value(acForm, 7, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.)}};
+                                                        , .T.;
+                                                        );
+                                         , ::create_window_form_shadow(acForm, 8, hJson);
+                                        }
+            CASE Creator():cType == OBJECT_BOX
+                Creator():aoVariables := {Variable():new('Top';
+                                                        , ::is_variable(acForm, 2);
+                                                        , {::extract_value(acForm, 2, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Left';
+                                                        , ::is_variable(acForm, 3);
+                                                        , {::extract_value(acForm, 3, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new('Bottom';
+                                                        , ::is_variable(acForm, 4);
+                                                        , {::extract_value(acForm, 4, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Right';
+                                                        , ::is_variable(acForm, 5);
+                                                        , {::extract_value(acForm, 5, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new('Box';
+                                                        , ::is_variable(acForm, 6);
+                                                        , {::extract_value(acForm, 6, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_box(AllTrim(oGet:buffer))}};
+                                                        );
+                                        , Variable():new('Color';
+                                                        , ::is_variable(acForm, 7);
+                                                        , {::extract_value(acForm, 7, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.)}};
+                                                        , .T.;
+                                                        );
+                                        }
+            CASE Creator():cType == OBJECT_SAY 
+                Creator():aoVariables := {Variable():new('Row';
+                                                        , ::is_variable(acForm, 2);
+                                                        , {::extract_value(acForm, 2, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Column';
+                                                        , ::is_variable(acForm, 3);
+                                                        , {::extract_value(acForm, 3, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , ::create_say_get_form_expression(acForm, 4, hJson);
+                                        , Variable():new('Picture';
+                                                        , ::is_variable(acForm, 5);
+                                                        , {::extract_value(acForm, 5, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_picture(RTrim(oGet:buffer))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Color';
+                                                        , ::is_variable(acForm, 6);
+                                                        , {::extract_value(acForm, 6, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.)}};
+                                                        , .T.;
+                                                        );
+                                        }
+            CASE Creator():cType == OBJECT_GET
+
+                Creator():aoVariables := {Variable():new('Row';
+                                                        , ::is_variable(acForm, 2);
+                                                        , {::extract_value(acForm, 2, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Column';
+                                                        , ::is_variable(acForm, 3);
+                                                        , {::extract_value(acForm, 3, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , ::create_say_get_form_expression(acForm, 4, hJson);
+                                        , Variable():new('Say picture';
+                                                        , ::is_variable(acForm, 5);
+                                                        , {::extract_value(acForm, 5, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_picture(RTrim(oGet:buffer))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Say color';
+                                                        , ::is_variable(acForm, 6);
+                                                        , {::extract_value(acForm, 6, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.)}};
+                                                        , .T.;
+                                                        );
+                                        , ::create_get_form_variable(acForm, 7, hJson);
+                                        , Variable():new('Get picture';
+                                                        , ::is_variable(acForm, 8);
+                                                        , {::extract_value(acForm, 8, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_picture(RTrim(oGet:buffer))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Get color';
+                                                        , ::is_variable(acForm, 9);
+                                                        , {::extract_value(acForm, 9, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.)}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Caption';
+                                                        , ::is_variable(acForm, 10);
+                                                        , {::extract_value(acForm, 10, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Message';
+                                                        , ::is_variable(acForm, 11);
+                                                        , {::extract_value(acForm, 11, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('When';
+                                                        , ::is_variable(acForm, 12);
+                                                        , {::extract_value(acForm, 12, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Valid';
+                                                        , ::is_variable(acForm, 13);
+                                                        , {::extract_value(acForm, 13, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        }
+            CASE Creator():cType == OBJECT_CHECKBOX
+                Creator():aoVariables := {Variable():new('Row';
+                                                        , ::is_variable(acForm, 2);
+                                                        , {::extract_value(acForm, 2, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Column';
+                                                        , ::is_variable(acForm, 3);
+                                                        , {::extract_value(acForm, 3, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new(::extract_name(acForm, 4);
+                                                        , .T.;
+                                                        , {::extract_value(acForm, 4, hJson)};
+                                                        , {'L'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Caption';
+                                                        , ::is_variable(acForm, 5);
+                                                        , {::extract_value(acForm, 5, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Message';
+                                                        , ::is_variable(acForm, 6);
+                                                        , {::extract_value(acForm, 6, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('When';
+                                                        , ::is_variable(acForm, 7);
+                                                        , {::extract_value(acForm, 7, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Valid';
+                                                        , ::is_variable(acForm, 8);
+                                                        , {::extract_value(acForm, 8, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Color';
+                                                        , ::is_variable(acForm, 9);
+                                                        , {::extract_value(acForm, 9, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.) .AND. !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 3)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 4))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Focus';
+                                                        , ::is_variable(acForm, 10);
+                                                        , {::extract_value(acForm, 10, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('State';
+                                                        , ::is_variable(acForm, 11);
+                                                        , {::extract_value(acForm, 11, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Style';
+                                                        , ::is_variable(acForm, 12);
+                                                        , {::extract_value(acForm, 12, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_style(RTrim(oGet:buffer))}};
+                                                        , .T.;
+                                                        );
+                                        }
+            CASE Creator():cType == OBJECT_LISTBOX
+                       Creator():aoVariables := {Variable():new('Top';
+                                                        , ::is_variable(acForm, 2);
+                                                        , {::extract_value(acForm, 2, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Left';
+                                                        , ::is_variable(acForm, 3);
+                                                        , {::extract_value(acForm, 3, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new('Bottom';
+                                                        , ::is_variable(acForm, 4);
+                                                        , {::extract_value(acForm, 4, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Right';
+                                                        , ::is_variable(acForm, 5);
+                                                        , {::extract_value(acForm, 5, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , ::create_listbox_radiogroup_form_variable(acForm, 6, hJson);
+                                        , Variable():new('List';
+                                                        , ::is_variable(acForm, 7);
+                                                        , {hb_JsonDecode(IF(::is_variable(acForm, 7), hJson[::extract_name(acForm, 7)], RTrim(SubStr(acForm[7], 3))))['']};
+                                                        , {'A'};
+                                                        , {{| xValue | ::validate_listbox_list(xValue)}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Caption';
+                                                        , ::is_variable(acForm, 8);
+                                                        , {::extract_value(acForm, 8, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Message';
+                                                        , ::is_variable(acForm, 9);
+                                                        , {::extract_value(acForm, 9, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('When';
+                                                        , ::is_variable(acForm, 10);
+                                                        , {::extract_value(acForm, 10, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Valid';
+                                                        , ::is_variable(acForm, 11);
+                                                        , {::extract_value(acForm, 11, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Color';
+                                                        , ::is_variable(acForm, 12);
+                                                        , {::extract_value(acForm, 12, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.) .AND. IF(Creator_listbox():dropdown(), !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 7)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 8)), !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 6)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 7)))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Focus';
+                                                        , ::is_variable(acForm, 13);
+                                                        , {::extract_value(acForm, 13, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('State';
+                                                        , ::is_variable(acForm, 14);
+                                                        , {::extract_value(acForm, 14, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Dropdown';
+                                                        , ::is_variable(acForm, 15);
+                                                        , {::extract_value(acForm, 15, hJson)};
+                                                        , {'L'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Scrollbar';
+                                                        , ::is_variable(acForm, 16);
+                                                        , {::extract_value(acForm, 16, hJson)};
+                                                        , {'L'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        }
+            CASE Creator():cType == OBJECT_RADIOGROUP
+                       Creator():aoVariables := {Variable():new('Top';
+                                                        , ::is_variable(acForm, 2);
+                                                        , {::extract_value(acForm, 2, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Left';
+                                                        , ::is_variable(acForm, 3);
+                                                        , {::extract_value(acForm, 3, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , Variable():new('Bottom';
+                                                        , ::is_variable(acForm, 4);
+                                                        , {::extract_value(acForm, 4, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
+                                                        );
+                                        , Variable():new('Right';
+                                                        , ::is_variable(acForm, 5);
+                                                        , {::extract_value(acForm, 5, hJson)};
+                                                        , {'N'};
+                                                        , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
+                                                        );
+                                        , ::create_listbox_radiogroup_form_variable(acForm, 6, hJson);
+                                        , Variable():new('Group';
+                                                        , ::is_variable(acForm, 7);
+                                                        , {hb_JsonDecode(IF(::is_variable(acForm, 7), hJson[::extract_name(acForm, 7)], RTrim(SubStr(acForm[7], 3))))['']};
+                                                        , {'A'};
+                                                        , {{| xValue | ::validate_radiogroup_group(xValue)}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Caption';
+                                                        , ::is_variable(acForm, 8);
+                                                        , {::extract_value(acForm, 8, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Message';
+                                                        , ::is_variable(acForm, 9);
+                                                        , {::extract_value(acForm, 9, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        );
+                                        , Variable():new('Color';
+                                                        , ::is_variable(acForm, 10);
+                                                        , {::extract_value(acForm, 10, hJson)};
+                                                        , {'C'};
+                                                        , {{| oGet | is_color(oGet:buffer, .T.) .AND. !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 2)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 3))}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Focus';
+                                                        , ::is_variable(acForm, 11);
+                                                        , {::extract_value(acForm, 11, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('When';
+                                                        , ::is_variable(acForm, 12);
+                                                        , {::extract_value(acForm, 12, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        , Variable():new('Valid';
+                                                        , ::is_variable(acForm, 13);
+                                                        , {::extract_value(acForm, 13, hJson)};
+                                                        , {'C'};
+                                                        , {{|| .T.}};
+                                                        , .T.;
+                                                        );
+                                        }
+        ENDCASE
+    ENDIF
 
 RETURN NIL
 
-METHOD set_distinct_name(cName, hJson)
+METHOD create_say_get_form_expression(acForm, nIndex, hJson) CLASS Creator
+
+    LOCAL cType := ::extract_type(acForm, nIndex)
+    LOCAL oResult
+
+    DO CASE
+        CASE cType == 'C'
+            oResult := Variable():new('Expression', ::is_variable(acForm, nIndex), {::extract_value(acForm, nIndex, hJson), 3.14, Date(), .T.};
+                                      , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
+                                     )
+        CASE cType == 'N'
+            oResult := Variable():new('Expression', ::is_variable(acForm, nIndex), {'Expression', ::extract_value(acForm, nIndex, hJson), Date(), .T.};
+                                      , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
+                                     )
+        CASE cType == 'D'
+            oResult := Variable():new('Expression', ::is_variable(acForm, nIndex), {'Expression',  3.14, ::extract_value(acForm, nIndex, hJson), .T.};
+                                      , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
+                                     )
+        CASE cType == 'L'
+            oResult := Variable():new('Expression', ::is_variable(acForm, nIndex), {'Expression',  3.14, Date(), ::extract_value(acForm, nIndex, hJson)};
+                                      , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
+                                     )
+    ENDCASE
+
+RETURN oResult
+
+METHOD create_get_form_variable(acForm, nIndex, hJson) CLASS Creator
+
+    LOCAL cType := ::extract_type(acForm, nIndex)
+    LOCAL cName := ::extract_name(acForm, nIndex, hJson)
+    LOCAL oResult
+
+    DO CASE
+        CASE cType == 'C'
+            oResult := Variable():new(cName, .T., {hJson[cName], 3.14, Date(), .T.};
+                                      , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}}, , 1;
+                                     )
+        CASE cType == 'N'
+            oResult := Variable():new(cName, .T., {'Expression', hJson[cName], Date(), .T.};
+                                      , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}}, , 2;
+                                     )
+        CASE cType == 'D'
+            oResult := Variable():new(cName, .T., {'Expression',  3.14, hJson[cName], .T.};
+                                      , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}}, , 3;
+                                     )
+        CASE cType == 'L'
+            oResult := Variable():new(cName, .T., {'Expression',  3.14, Date(), hJson[cName]};
+                                      , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}}, , 4;
+                                     )
+    ENDCASE
+
+RETURN oResult
+
+METHOD create_listbox_radiogroup_form_variable(acForm, nIndex, hJson) CLASS Creator
+
+    LOCAL cType := ::extract_type(acForm, nIndex)
+    LOCAL cName := ::extract_name(acForm, nIndex, hJson)
+    LOCAL oResult
+
+    DO CASE
+        CASE cType == 'C'
+            oResult := Variable():new(cName, .T., {hJson[cName], 1}, {'C', 'N'}, {{|| .T.}, {|| .T.}}, , 1)
+        CASE cType == 'N'
+            oResult := Variable():new(cName, .T., {'Variable', hJson[cName]}, {'C', 'N'}, {{|| .T.}, {|| .T.}}, , 2)
+    ENDCASE
+
+RETURN oResult
+
+METHOD create_window_form_shadow(acForm, nIndex, hJson) CLASS Creator
+
+    LOCAL cType := ::extract_type(acForm, nIndex)
+    LOCAL oResult
+
+    DO CASE
+        CASE cType == 'C'
+            oResult := Variable():new('Shadow', ::is_variable(acForm, nIndex), {::extract_value(acForm, nIndex, hJson), -1};
+                                      , {'C', 'N'}, {{|| .T.}, {|| .T.}}, , 1;
+                                     )
+        CASE cType == 'N'
+            oResult := Variable():new('Shadow', ::is_variable(acForm, nIndex), {Config():get_config('DefaultWindowCreatorShadow'), ::extract_value(acForm, nIndex, hJson)};
+                                      , {'C', 'N'}, {{|| .T.}, {|| .T.}};
+                                     )
+    ENDCASE
+
+RETURN oResult
+
+METHOD set_distinct_name(cName, hJson) CLASS Creator
 
     MEMVAR GETLIST
 
@@ -644,8 +1171,8 @@ METHOD save_form() CLASS Creator
     WClose()
 
     IF nAction == 2
-        GO TOP
 
+        GO TOP
         DO WHILE !EoF()
             IF field->method == cVariable
                 cString += Creator():aoVariables[RecNo()]:to_string(.T., field->name)
@@ -658,8 +1185,14 @@ METHOD save_form() CLASS Creator
             SKIP
         ENDDO
 
-        dbForms->code += IF(Empty(dbForms->code), '', OBJECT_SEPARATOR) + Left(cString, Len(cString) - 1)
+        IF Alias(nOldSelect) == 'DBREORDER'
+            dbReorder->code := Left(cString, Len(cString) - 1)
+        ELSE
+            dbForms->code += IF(Empty(dbForms->code), '', OBJECT_SEPARATOR) + Left(cString, Len(cString) - 1)
+        ENDIF
+
         dbVariables->json := hb_JsonEncode(hJson, .T.)
+
         COMMIT
     ENDIF
 
@@ -693,9 +1226,13 @@ METHOD display_form() CLASS Creator
     FOR EACH oElement IN Creator():aoVariables
         IF oElement:is_variable_id()
             cName := oElement:get_name()
-            DO WHILE hb_HHasKey(hJson, cName)
-                cName += Str(Int(hb_Random(0, 10.0)))
-            ENDDO
+
+            IF Alias() != 'DBREORDER'
+                DO WHILE hb_HHasKey(hJson, cName)
+                    cName += Str(hb_RandomInt(0, 10))
+                ENDDO
+            ENDIF
+
             cString += oElement:to_string(.T.)
             hJson[cName] := oElement:get_value()
         ELSE
@@ -717,13 +1254,15 @@ METHOD display_form() CLASS Creator
 
     lSuccess := Parser():prepare_form_from_record(hb_ATokens(cString, OBJECT_SEPARATOR), hJson)
 
+    /* TO NIE POWINNO BYC TUTAJ -> ta metoda tylko displeju a blad obsluz gdzies indziej
     IF !lSuccess
         Inform(Parser():log(''))
     ENDIF
+    */
 
 RETURN lSuccess
 
-METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen) CLASS Creator
+METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos) CLASS Creator
 
     MEMVAR GETLIST
 
@@ -735,6 +1274,7 @@ METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen) CLASS Creator
     LOCAL nChooseLoop := 1
     LOCAL lUpdated := .F.
     LOCAL lBrokenForm := .F.
+    LOCAL lDisplayed
     LOCAL lWasDropdown
     LOCAL nChooseMenu
     LOCAL i
@@ -746,10 +1286,29 @@ METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen) CLASS Creator
     WSelect(nOldWindow)
     WMove(WRow(), WCol())
 
-    ::display_form()
+    IF Alias() == 'DBREORDER'
+        IF WSelect() > 0
+            WClose()
+        ENDIF
+
+        prepare_form(ACopy(xFormCode, Array(Val(field->line_nr) - 1), 1, Val(field->line_nr) - 1))
+        ::display_form()
+        prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - Val(field->line_nr)), Val(field->line_nr) + 1))
+    ELSE
+        ::display_form()
+    ENDIF
+
+    IF ::lIsWindow .AND. ValType(xFormCode) == 'A'
+        prepare_form(xFormCode)
+    ENDIF
 
     IF Creator():cType == OBJECT_LISTBOX .AND. Creator_listbox():dropdown()
-        GETLIST[Len(GETLIST)][LISTBOX_SLOT]:open()
+        IF Alias() == 'DBREORDER'
+            GETLIST[xGetPos][LISTBOX_SLOT]:open()
+        ELSE
+            GETLIST[Len(GETLIST)][LISTBOX_SLOT]:open()
+        ENDIF
+
         lWasDropDown := Creator_listbox():dropdown()
     ENDIF
 
@@ -795,16 +1354,38 @@ METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen) CLASS Creator
                 ENDIF
             ENDIF
 
-            IF ::display_form()
+            IF Alias() == 'DBREORDER'
+                IF WSelect() > 0
+                    WClose()
+                ENDIF
+
+                prepare_form(ACopy(xFormCode, Array(Val(field->line_nr) - 1), 1, Val(field->line_nr) - 1))
+                lDisplayed := ::display_form()
+                prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - Val(field->line_nr)), Val(field->line_nr) + 1))
+            ELSE
+                lDisplayed := ::display_form()
+            ENDIF
+
+            IF lDisplayed
+
+                IF ::lIsWindow .AND. ValType(xFormCode) == 'A'
+                    prepare_form(xFormCode)
+                ENDIF
 
                 IF Creator():cType == OBJECT_LISTBOX .AND. Creator_listbox():dropdown()
-                    GETLIST[Len(GETLIST)][LISTBOX_SLOT]:open()
+                    IF Alias() == 'DBREORDER'
+                        GETLIST[xGetPos][LISTBOX_SLOT]:open()
+                    ELSE
+                        GETLIST[Len(GETLIST)][LISTBOX_SLOT]:open()
+                    ENDIF
                 ENDIF
 
                 GETLIST := ASize(GETLIST, Len(GETLIST) - 1)
+
                 nChooseLoop := Dialog(Config():get_config('DialogWhatShouldIDo'), {Config():get_config('Continue'), Config():get_config('Save'), Config():get_config('Quit')})
                 lBrokenForm := .F.
             ELSE
+                Inform(Parser():log(''))
                 nChooseLoop := Dialog(Config():get_config('BrokenFormWhatShouldIDo'), {Config():get_config('Continue'), Config():get_config('Quit')})
                 lBrokenForm := .T.
             ENDIF
@@ -827,6 +1408,38 @@ METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen) CLASS Creator
     WMove(WRow(), WCol())
 
 RETURN NIL
+
+METHOD validate_listbox_list(xList) CLASS Creator
+
+    LOCAL xElement
+    
+    IF ValType(xList) != 'A'
+        RETURN .F.
+    ENDIF
+
+    FOR EACH xElement IN xList
+        IF ValType(xElement) != 'C'
+            RETURN .F.
+        ENDIF
+    NEXT
+
+RETURN .T.
+
+METHOD validate_radiogroup_group(xGroup) CLASS Creator
+
+    LOCAL xElement
+
+    IF ValType(xGroup) != 'A'
+        RETURN .F.
+    ENDIF
+
+    FOR EACH xElement IN xGroup
+        IF ValType(xElement) != 'C'
+            RETURN .F.
+        ENDIF
+    NEXT
+
+RETURN .T.
 
 FUNCTION row_browse_save(oRowBrowse, nKey)
 

@@ -248,10 +248,12 @@ STATIC PROCEDURE save()
 
 RETURN
 
-STATIC PROCEDURE magic()
+STATIC PROCEDURE rebuild()
 
+    MEMVAR GETLIST
+    
     LOCAL nOldWindow := WSelect()
-    LOCAL acCode := hb_ATokens(RTrim(field->code), OBJECT_SEPARATOR)
+    LOCAL nOldRecNo := RecNo()
     LOCAL hMenuItems := hb_Hash(OBJECT_WINDOW, 'WINDOW';
                                 , OBJECT_BOX, 'BOX';
                                 , OBJECT_SAY, 'SAY';
@@ -260,6 +262,10 @@ STATIC PROCEDURE magic()
                                 , OBJECT_LISTBOX, 'LISTBOX';
                                 , OBJECT_RADIOGROUP, 'RADIOGROUP';
                                )
+    LOCAL cType := hMenuItems[hb_ATokens(RTrim(field->code), LINE_SEPARATOR)[1]]
+    LOCAL nLineNr := Val(field->line_nr)
+    LOCAL acFormCode := Array(0)
+    LOCAL nGetPos := 0
     LOCAL hJson
     LOCAL cOldScreen
     LOCAL axOldKeys
@@ -269,11 +275,33 @@ STATIC PROCEDURE magic()
 
     hJson := hb_JsonDecode(dbVariables->json)
 
-    IF Parser():check_correctness(acCode, hJson)
+    GO TOP
+    DO WHILE !EoF()
+        AAdd(acFormCode, RTrim(field->code))
+        IF Val(field->line_nr) <= nLineNr
+            IF AScan({'WINDOW', 'BOX', 'SAY'}, hMenuItems[hb_ATokens(RTrim(field->code), LINE_SEPARATOR)[1]]) == 0
+                ++nGetPos
+            ENDIF
+        ENDIF
+        SKIP
+    ENDDO
+    GO nOldRecNo
 
-        alert('Moze nie dzialac. Przerwij program aby nie popsuc czegos')
+    IF validate(acFormCode, hJson)
 
-        &('Creator_' + Lower(hMenuItems[hb_ATokens(RTrim(field->code), LINE_SEPARATOR)[1]]) + '():edit_form()')
+        IF cType == 'WINDOW'
+            IF prepare_form(acFormCode, hJson) 
+                EVal(&('{| acFormCode, nGetPos | Creator_' + Lower(cType) + '():edit_form(acFormCode, nGetPos)}'), acFormCode, nGetPos)
+            ELSE
+                Inform(Parser():log(''))
+            ENDIF
+        ELSE
+            IF prepare_form(hb_ADel(AClone(acFormCode), nLineNr, .T.), hJson) 
+                EVal(&('{| acFormCode, nGetPos | Creator_' + Lower(cType) + '():edit_form(acFormCode, nGetPos)}'), acFormCode, nGetPos)
+            ELSE
+                Inform(Parser():log(''))
+            ENDIF
+        ENDIF
 
         IF WSelect() != nOldWindow
             WClose()
@@ -282,6 +310,7 @@ STATIC PROCEDURE magic()
         Inform(Parser():log(''))
     ENDIF
 
+    CLEAR GETS
     RESTORE KEYS FROM axOldKeys
     RESTORE SCREEN FROM cOldScreen
 
@@ -411,8 +440,7 @@ PROCEDURE change_order()
 
     SET KEY K_DEL TO delete_row()
 
-    SET KEY K_F2 TO magic()
-
+    SET KEY K_F2 TO rebuild()
     SET KEY K_F3 TO swap()
     SET KEY K_F4 TO edit()
     SET KEY K_F5 TO move()

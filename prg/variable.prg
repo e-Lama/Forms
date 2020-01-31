@@ -7,7 +7,7 @@ CREATE CLASS Variable
 
 EXPORTED:
 
-    METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTrim, nEditMinLength, nEditMaxLength) CONSTRUCTOR
+    METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTrim, nIndex) CONSTRUCTOR
     METHOD get_value() INLINE ::axValues[::nIndex]
     METHOD get_type() INLINE ValType(::axValues[::nIndex])
     METHOD get_name() INLINE ::cName
@@ -34,8 +34,6 @@ HIDDEN:
     VAR acPossibleTypes AS ARRAY INIT Array(0)
     VAR abValidates AS ARRAY INIT Array(0)
     VAR lAlwaysTrim AS LOGICAL INIT .F.
-    VAR nEditMinLength AS NUMERIC INIT 0
-    VAR nEditMaxLength AS NUMERIC INIT 0
 
     VAR nIndex AS NUMERIC INIT 1
 
@@ -50,7 +48,7 @@ HIDDEN:
 
 ENDCLASS LOCKED
 
-METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTrim, nEditMinLength, nEditMaxLength) CLASS Variable
+METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTrim, nIndex) CLASS Variable
 
     ::cName := cName
     ::axValues := axValues
@@ -62,12 +60,8 @@ METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTr
         ::lAlwaysTrim := lAlwaysTrim
     ENDIF
 
-    IF ValType(nEditMinLength) == 'N'
-        ::nEditMinLength := nEditMinLength
-    ENDIF
-
-    IF ValType(nEditMaxLength) == 'N'
-        ::nEditMaxLength := nEditMaxLength
+    IF ValType(nIndex) == 'N'
+        ::nIndex := nIndex
     ENDIF
 
 RETURN Self
@@ -120,7 +114,8 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
                 IF Eval(::abValidates[nIndex], xValue)
                     lContinue := .F.
                 ELSE
-                    lContinue := NoYes(Config():get_config('IncorrectValueVariable'))
+                    Inform(Config():get_config('IncorrectValueVariable'))
+                    xValue := ::axValues[nIndex]
                 ENDIF
             ENDDO
         ELSE

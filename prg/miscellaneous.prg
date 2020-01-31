@@ -1,21 +1,37 @@
 #include "parser.ch"
 
-FUNCTION prepare_form()
+FUNCTION prepare_form(xCode, xJson)
 
-    LOCAL hJson := hb_JsonDecode(dbVariables->json)
+    IF PCount() == 2 .AND. ValType(xCode) == 'A'
+        RETURN Parser():prepare_form_from_record(xCode, xJson)
+    ELSE
+        xJson := hb_JsonDecode(dbVariables->json)
 
-    IF ValType(hJson) != 'H'
-        hJson := hb_Hash()
+        IF ValType(xJson) != 'H'
+            xJson := hb_Hash()
+        ENDIF
     ENDIF
 
-RETURN IF(Empty(field->code), .T., Parser():prepare_form_from_record(hb_ATokens(field->code, OBJECT_SEPARATOR), hJson))
-
-FUNCTION validate()
-
-    LOCAL hJson := hb_JsonDecode(dbVariables->json)
-
-    IF ValType(hJson) != 'H'
-        hJson := hb_Hash()
+    IF PCount() > 0 .AND. ValType(xCode) == 'A'
+        RETURN Parser():prepare_form_from_record(xCode, xJson)
     ENDIF
 
-RETURN IF(Empty(field->code), .T., Parser():check_correctness(hb_ATokens(field->code, OBJECT_SEPARATOR), hJson))
+RETURN IF(Empty(field->code), .T., Parser():prepare_form_from_record(hb_ATokens(field->code, OBJECT_SEPARATOR), xJson))
+
+FUNCTION validate(xCode, xJson)
+
+    IF PCount() == 2 .AND. ValType(xCode) == 'A'
+        RETURN Parser():check_correctness(xCode, xJson)
+    ELSE
+        xJson := hb_JsonDecode(dbVariables->json)
+
+        IF ValType(xJson) != 'H'
+            xJson := hb_Hash()
+        ENDIF
+    ENDIF
+
+    IF PCount() > 0 .AND. ValType(xCode) == 'A'
+        RETURN Parser():prepare_form_from_record(xCode, xJson)
+    ENDIF
+
+RETURN IF(Empty(field->code), .T., Parser():check_correctness(hb_ATokens(field->code, OBJECT_SEPARATOR), xJson))

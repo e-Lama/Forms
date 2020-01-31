@@ -1,6 +1,9 @@
 #define OBJECT_SEPARATOR Chr(10) + Chr(10)
 #define LINE_SEPARATOR Chr(10)
 
+#define CONSTANT 'C'
+#define VARIABLE 'V'
+
 //Type of a form
 #define OBJECT 1
 #define OBJECT_WINDOW 'WN'
