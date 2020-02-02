@@ -1,4 +1,5 @@
 #include "hbclass.ch"
+#include "box.ch"
 
 #include "functions.ch"
 #include "variables.ch"
@@ -101,16 +102,38 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
 
     MEMVAR GETLIST
 
+    LOCAL nOldWindow := WSelect()
+    LOCAL nOldCursor := Set(_SET_CURSOR)
+    LOCAL cOldHeader := Window():header(Config():get_config('MemoEditHeader'))
+    LOCAL cOldFooter := Window():footer(Config():get_config('MemoEditFooter'))
+    LOCAL nTop := Window():get_top() + 1
+    LOCAL nLeft := Window():get_left() + 1
+    LOCAL nBottom := Window():get_bottom() - 1
+    LOCAL nRight := Window():get_right() - 1
     LOCAL lContinue := .T.
     LOCAL xValue := ::axValues[nIndex]
     LOCAL cType := ValType(xValue)
     LOCAL hVariables := hb_Hash()
+    LOCAL cOldScreen
+
+    SAVE SCREEN TO cOldScreen
 
     IF YesNo(Config():get_config('ChangeVariableValue'))
 
         IF cType == 'A'
+
+            WSelect(0)
+            Window():refresh_header()
+            Window():refresh_footer()
+
             DO WHILE lContinue
-                xValue := hb_JsonDecode(MemoEdit(hb_jsonEncode(xValue, .T.)))
+
+                @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
+                @ nTop, Int(nRight + nLeft - Len(Config():get_config('Code'))) / 2 SAY Config():get_config('Code')
+                xValue := hb_JsonDecode(MemoEdit(hb_jsonEncode(xValue, .T.), nTop + 1, nLeft + 1, nBottom - 1, nRight - 1))
+
+                SET CURSOR (cast(nOldCursor, 'L'))
+
                 IF Eval(::abValidates[nIndex], xValue)
                     lContinue := .F.
                 ELSE
@@ -118,6 +141,9 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
                     xValue := ::axValues[nIndex]
                 ENDIF
             ENDDO
+
+            WSelect(nOldWindow)
+
         ELSE
             IF cType == 'C'
                 xValue := xValue + Space(VARIABLE_CHARACTER_LENGTH - Len(xValue))
@@ -125,16 +151,16 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
 
             hVariables['variable'] := xValue
 
-            DO CASE
-                CASE cType == 'C'
-                    hVariables['picture'] := '@K ' + Replicate('X', Len(xValue))
-                CASE cType == 'N'
-                    hVariables['picture'] := '@K ' + Replicate('9', Len(Str(0)))
-                CASE cType == 'L'
-                    hVariables['picture'] := '@K Y'
-                CASE cType == 'D'
-                    hVariables['picture'] := '@KD'
-            ENDCASE
+            SWITCH cType
+                CASE 'C'
+                    hVariables['picture'] := Replicate('X', Len(xValue))
+                CASE 'N'
+                    hVariables['picture'] := Replicate('9', Len(Str(0)))
+                CASE 'L'
+                    hVariables['picture'] := '@Y'
+                CASE 'D'
+                    hVariables['picture'] := '@D'
+            ENDSWITCH
 
             GETLIST := {}
 
@@ -168,7 +194,14 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
                xValue := ::remove_spaces(xValue)
             ENDIF
         ENDIF
+
     ENDIF
+
+    Window():header(cOldHeader)
+    Window():footer(cOldFooter)
+    RESTORE SCREEN FROM cOldScreen
+    Window():refresh_header()
+    Window():refresh_footer()
 
 RETURN xValue
 
@@ -178,16 +211,16 @@ METHOD get_type_array()
     LOCAL cType
     
     FOR EACH cType IN ::acPossibleTypes
-        DO CASE
-            CASE cType == 'N'
+        SWITCH cType
+            CASE 'N'
                 AAdd(acArray, 'NUMERIC')
-            CASE cType == 'D'
+            CASE 'D'
                 AAdd(acArray, 'DATE')
-            CASE cType == 'C'
+            CASE 'C'
                 AAdd(acArray, 'CHARACTER')
-            CASE cType == 'L'
+            CASE 'L'
                 AAdd(acArray, 'LOGICAL')
-        ENDCASE
+        ENDSWITCH
     NEXT
 
 RETURN acArray

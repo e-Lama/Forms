@@ -33,7 +33,7 @@ PROTECTED:
     METHOD get_value(nIndex) INLINE Creator():aoVariables[nIndex]:get_value()
     METHOD set_value(nIndex, xValue) INLINE Creator():aoVariables[nIndex]:set_value(xValue)
     METHOD clear_window_flag() INLINE Creator():lIsWindow := .F.
-    METHOD set_distinct_name(cName, hJson)
+    METHOD set_distinct_name(cName, hJson, lAcceptFirstOption)
 
     METHOD is_variable(acForm, nIndex) INLINE SubStr(acForm[nIndex], 1, 1) == VARIABLE 
     METHOD extract_type(acForm, nIndex) INLINE SubStr(acForm[nIndex], 2, 1)
@@ -521,7 +521,7 @@ METHOD make_form_array(xCode) CLASS Creator
                 throw(RUNTIME_EXCEPTION)
         ENDCASE
     ELSE
-        acForm := hb_ATokens(xCode[Val(field->line_nr)], LINE_SEPARATOR)
+        acForm := hb_ATokens(xCode[field->line_nr], LINE_SEPARATOR)
 
         DO CASE
             CASE Creator():cType == OBJECT_WINDOW
@@ -1035,7 +1035,7 @@ METHOD create_window_form_shadow(acForm, nIndex, hJson) CLASS Creator
 
 RETURN oResult
 
-METHOD set_distinct_name(cName, hJson) CLASS Creator
+METHOD set_distinct_name(cName, hJson, lAcceptFirstOption) CLASS Creator
 
     MEMVAR GETLIST
 
@@ -1043,7 +1043,10 @@ METHOD set_distinct_name(cName, hJson) CLASS Creator
     LOCAL nOldRecNo := dbForms->(RecNo())
     LOCAL aoOldGetList := AClone(GETLIST)
     LOCAL hVariables := hb_Hash('Variable', cName + Space(VARIABLE_CHARACTER_LENGTH - Len(cName)))
+    LOCAL cFirstOption := cName
     LOCAL cOldScreen
+
+    hb_Default(@lAcceptFirstOption, .F.)
 
     CLEAR GETS
 
@@ -1053,7 +1056,7 @@ METHOD set_distinct_name(cName, hJson) CLASS Creator
         IF Parser():prepare_form_from_database(Config():get_config('Language'), 'SET_DISTINCT_NAME', hVariables)
             READ
             hVariables := Parser():get_answers()
-            cName := hVariables['Variable']
+            cName := AllTrim(hVariables['Variable'])
             WClose()
             WSelect(0)
             RESTORE SCREEN FROM cOldScreen
@@ -1062,14 +1065,19 @@ METHOD set_distinct_name(cName, hJson) CLASS Creator
         ENDIF
     ENDIF
 
-    DO WHILE hb_HHasKey(hJson, AllTrim(cName))
+    DO WHILE hb_HHasKey(hJson, cName)
+
+        IF lAcceptFirstOption .AND. cName == cFirstOption
+            EXIT
+        ENDIF
+
         Inform(Config():get_config('DistinctNameFirstPart') + AllTrim(cName) + Config():get_config('DistinctNameSecondPart'))
         hVariables := hb_Hash('Variable', cName + Space(VARIABLE_CHARACTER_LENGTH - Len(cName)))
         WSelect(0)
         IF Parser():prepare_form_from_database(Config():get_config('Language'), 'SET_DISTINCT_NAME', hVariables)
             READ
             hVariables := Parser():get_answers()
-            cName := hVariables['Variable']
+            cName := AllTrim(hVariables['Variable'])
             WClose()
             WSelect(0)
             RESTORE SCREEN FROM cOldScreen
@@ -1082,7 +1090,7 @@ METHOD set_distinct_name(cName, hJson) CLASS Creator
     WSelect(nOldWindow)
     dbForms->(dbGoTo(nOldRecNo))
 
-RETURN AllTrim(cName)
+RETURN cName
 
 METHOD save_form() CLASS Creator
 
@@ -1141,7 +1149,7 @@ METHOD save_form() CLASS Creator
         IF field->is_ID
             field->begin_name := 'Variable'
             field->method := Config():get_config('SaveAsVariable')
-            field->name := ::set_distinct_name(oElement:get_name(), hJson) 
+            field->name := ::set_distinct_name(oElement:get_name(), hJson, Select('DBREORDER') != 0) 
             hJson[RTrim(field->name)] := oElement:get_value()
         ELSE
             field->begin_name := oElement:get_name()
@@ -1254,12 +1262,6 @@ METHOD display_form() CLASS Creator
 
     lSuccess := Parser():prepare_form_from_record(hb_ATokens(cString, OBJECT_SEPARATOR), hJson)
 
-    /* TO NIE POWINNO BYC TUTAJ -> ta metoda tylko displeju a blad obsluz gdzies indziej
-    IF !lSuccess
-        Inform(Parser():log(''))
-    ENDIF
-    */
-
 RETURN lSuccess
 
 METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos) CLASS Creator
@@ -1291,9 +1293,9 @@ METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
             WClose()
         ENDIF
 
-        prepare_form(ACopy(xFormCode, Array(Val(field->line_nr) - 1), 1, Val(field->line_nr) - 1))
+        prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
         ::display_form()
-        prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - Val(field->line_nr)), Val(field->line_nr) + 1))
+        prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
     ELSE
         ::display_form()
     ENDIF
@@ -1359,9 +1361,9 @@ METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
                     WClose()
                 ENDIF
 
-                prepare_form(ACopy(xFormCode, Array(Val(field->line_nr) - 1), 1, Val(field->line_nr) - 1))
+                prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
                 lDisplayed := ::display_form()
-                prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - Val(field->line_nr)), Val(field->line_nr) + 1))
+                prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
             ELSE
                 lDisplayed := ::display_form()
             ENDIF

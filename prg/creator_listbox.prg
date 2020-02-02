@@ -25,10 +25,10 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
     LOCAL cOldHeader := Window():header(Config():get_config('CreatorListboxHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('CreatorListboxFooter'))
     LOCAL nOldWindow := WSelect()
-    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), -1)
+    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), 0)
     LOCAL nLeftLimit := IF(WSelect() == 0, Window():get_left(), 0)
-    LOCAL nBottomLimit := IF(WSelect() == 0, Window():get_bottom(), MaxRow())
-    LOCAL nRightLimit := IF(WSelect() == 0, Window():get_right(), MaxCol())
+    LOCAL nBottomLimit := IF(WSelect() == 0, Window():get_bottom(), MaxRow() - 1)
+    LOCAL nRightLimit := IF(WSelect() == 0, Window():get_right(), MaxCol() - 1)
     LOCAL lActiveUpperLeftCorner := .T.
     LOCAL lFinish := .F.
     LOCAL nTop := WRow()
@@ -96,9 +96,9 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
                 RESTORE SCREEN FROM cScreen
             ENDIF
 
-            prepare_form(ACopy(xFormCode, Array(Val(field->line_nr) - 1), 1, Val(field->line_nr) - 1))
+            prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
             ::display_form()
-            prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - Val(field->line_nr)), Val(field->line_nr) + 1))
+            prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
         ELSE
             IF WSelect() > 0
                 WSelect(0)
@@ -121,7 +121,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
 
         IF ValType(aoWasGetList) == 'A' .AND. Len(aoWasGetList) != 0 .AND. Len(GETLIST) != 0
             IF ValType(xFormCode) == 'A'
-                aoWasGetList[xGetPos] := __objClone(GETLIST[xGetPos])//__objClone(ATail(GETLIST))
+                aoWasGetList[xGetPos] := __objClone(GETLIST[xGetPos])
             ELSE
                 aoWasGetList[Len(aoWasGetList)] := __objClone(ATail(GETLIST))
             ENDIF
@@ -140,46 +140,46 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
                 ::lDropdownListbox := !::lDropdownListbox
             CASE nKey == K_UP
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_TOP_LSB) - 1 < ::get_value(N_BOTTOM_LSB).AND. ::get_value(N_TOP_LSB) - 1 >= nTopLimit
+                    IF ::get_value(N_TOP_LSB) - 1 <= ::get_value(N_BOTTOM_LSB).AND. ::get_value(N_TOP_LSB) >= nTopLimit
                         ::decrement(N_TOP_LSB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_LSB) < ::get_value(N_BOTTOM_LSB) - 1 .AND. ::get_value(N_BOTTOM_LSB) - 1 >= nTopLimit
+                    IF ::get_value(N_TOP_LSB) <= ::get_value(N_BOTTOM_LSB) - 1 .AND. ::get_value(N_BOTTOM_LSB) >= nTopLimit
                         ::decrement(N_BOTTOM_LSB)
                     ENDIF
                 ENDIF    
             CASE nKey == K_LEFT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_LSB) - 1 < ::get_value(N_RIGHT_LSB) .AND. ::get_value(N_LEFT_LSB) - 1 >= nLeftLimit
+                    IF ::get_value(N_LEFT_LSB) - 1 <= ::get_value(N_RIGHT_LSB) .AND. ::get_value(N_LEFT_LSB) >= nLeftLimit
                         ::decrement(N_LEFT_LSB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_LSB) < ::get_value(N_RIGHT_LSB) - 1 .AND. ::get_value(N_RIGHT_LSB) - 1 >= nLeftLimit
+                    IF ::get_value(N_LEFT_LSB) <= ::get_value(N_RIGHT_LSB) - 1 .AND. ::get_value(N_RIGHT_LSB) >= nLeftLimit
                         ::decrement(N_RIGHT_LSB)
                     ENDIF
                 ENDIF
             CASE nKey == K_DOWN
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_TOP_LSB) + 1 < ::get_value(N_BOTTOM_LSB) .AND. ::get_value(N_TOP_LSB) + 1 <= nBottomLimit
+                    IF ::get_value(N_TOP_LSB) + 1 <= ::get_value(N_BOTTOM_LSB) .AND. ::get_value(N_TOP_LSB) <= nBottomLimit
                         ::increment(N_TOP_LSB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_LSB) < ::get_value(N_BOTTOM_LSB) + 1 .AND. ::get_value(N_BOTTOM_LSB) + 1 <= nBottomLimit
+                    IF ::get_value(N_TOP_LSB) <= ::get_value(N_BOTTOM_LSB) + 1 .AND. ::get_value(N_BOTTOM_LSB) <= nBottomLimit
                         ::increment(N_BOTTOM_LSB)
                     ENDIF
                 ENDIF
             CASE nKey == K_RIGHT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_LSB) + 1 < ::get_value(N_RIGHT_LSB) .AND. ::get_value(N_LEFT_LSB) + 1 <= nRightLimit
+                    IF ::get_value(N_LEFT_LSB) + 1 <= ::get_value(N_RIGHT_LSB) .AND. ::get_value(N_LEFT_LSB) <= nRightLimit
                         ::increment(N_LEFT_LSB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_LSB) < ::get_value(N_RIGHT_LSB) + 1 .AND. ::get_value(N_RIGHT_LSB) + 1 <= nRightLimit
+                    IF ::get_value(N_LEFT_LSB) <= ::get_value(N_RIGHT_LSB) + 1 .AND. ::get_value(N_RIGHT_LSB) <= nRightLimit
                         ::increment(N_RIGHT_LSB)
                     ENDIF
                 ENDIF
             CASE nKey == K_ENTER
-                ::form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen)
+                ::form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
             CASE nKey == K_ALT_ENTER
                 IF YesNo(Config():get_config('DoReadOrder'))
                     ReadModal(aoWasGetList)

@@ -8,7 +8,7 @@
 
 STATIC PROCEDURE delete_row()
 
-    LOCAL nOldLineNr := Val(field->line_nr)
+    LOCAL nOldLineNr := field->line_nr
     LOCAL axOldKeys
 
     ZAP KEYS TO axOldKeys
@@ -23,7 +23,7 @@ STATIC PROCEDURE delete_row()
 
     renumber()
     
-    SEEK PadL(LTrim(Str(nOldLineNr)), 4)
+    SEEK nOldLineNr
 
     RESTORE KEYS FROM axOldKeys
 
@@ -36,8 +36,8 @@ STATIC PROCEDURE renumber()
 
     GO TOP
     DO WHILE !EoF()
-        field->line_nr := PadL(LTrim(Str(n)), 4)
-        n++
+        field->line_nr := n
+        ++n
         SKIP
     ENDDO
     GO nOldRecNo
@@ -58,9 +58,9 @@ STATIC PROCEDURE move_row_down()
         RETURN
     ENDIF
 
-    field->line_nr := PadL(LTrim(Str(Val(field->line_nr) - 1)), 4)
+    field->line_nr := field->line_nr - 1
     GO nActualRecNo
-    field->line_nr := PadL(LTrim(Str(Val(field->line_nr) + 1)), 4)
+    field->line_nr := field->line_nr + 1
 
     SKIP -1
 
@@ -80,9 +80,9 @@ STATIC PROCEDURE move_row_up()
         RETURN
     ENDIF
 
-    field->line_nr := PadL(LTrim(Str(Val(field->line_nr) + 1)), 4)
+    field->line_nr := field->line_nr + 1
     GO nActualRecNo 
-    field->line_nr := PadL(LTrim(Str(Val(field->line_nr) - 1)), 4)
+    field->line_nr := field->line_nr - 1
 
 RETURN
 
@@ -90,9 +90,9 @@ STATIC PROCEDURE swap()
 
     MEMVAR GETLIST
 
-    LOCAL nOldLineNr := Val(field->line_nr)
-    LOCAL nFirst := Val(field->line_nr)
-    LOCAL nSecond := Val(field->line_nr)
+    LOCAL nOldLineNr := field->line_nr
+    LOCAL nFirst := field->line_nr
+    LOCAL nSecond := field->line_nr
     LOCAL hVariables := hb_Hash('nFirst';
                                 , nFirst;
                                 , 'nSecond';
@@ -118,11 +118,11 @@ STATIC PROCEDURE swap()
         RETURN
     ENDIF
 
-    SEEK PadL(LTrim(Str(nFirst)), 4)
-    field->line_nr := PadL(LTrim(Str(nSecond)), 4)
-    SEEK PadL(LTrim(Str(nSecond)), 4)
-    field->line_nr := PadL(LTrim(Str(nFirst)), 4)
-    SEEK PadL(LTrim(Str(nOldLineNr)), 4)
+    SEEK nFirst
+    field->line_nr := nSecond
+    SEEK nSecond
+    field->line_nr := nFirst
+    SEEK nOldLineNr
 
     RESTORE KEYS FROM axOldKeys
 
@@ -133,9 +133,9 @@ STATIC PROCEDURE move()
     MEMVAR GETLIST
 
     LOCAL nOldRecNo := RecNo()
-    LOCAL hVariables := hb_Hash('nWhere', Val(field->line_nr))
+    LOCAL hVariables := hb_Hash('nWhere', field->line_nr)
     LOCAL hReorder := hb_Hash()
-    LOCAL nWasLineNr := Val(field->line_nr)
+    LOCAL nWasLineNr := field->line_nr
     LOCAL nRecNo
     LOCAL nTo
     LOCAL axOldKeys
@@ -151,33 +151,33 @@ STATIC PROCEDURE move()
         throw(Config():get_config('CriticalError'))
     ENDIF
 
-    IF nTo == Val(field->line_nr) .OR. nTo < 1 .OR. nTo > LastRec()
+    IF nTo == field->line_nr .OR. nTo < 1 .OR. nTo > LastRec()
         Inform(Config():get_config('IncorrectValues'))
         RESTORE KEYS FROM axOldKeys
         RETURN
     ENDIF
 
-    SEEK PadL(LTrim(Str(nTo)), 4)
+    SEEK nTo
 
     IF nWasLineNr < nTo
-        DO WHILE Val(field->line_nr) > nWasLineNr
-            hReorder[RecNo()] := Val(field->line_nr) - 1    
+        DO WHILE field->line_nr > nWasLineNr
+            hReorder[RecNo()] := field->line_nr - 1    
             SKIP -1
         ENDDO
     ELSE
-        DO WHILE Val(field->line_nr) < nWasLineNr
-            hReorder[RecNo()] := Val(field->line_nr) + 1
+        DO WHILE field->line_nr < nWasLineNr
+            hReorder[RecNo()] := field->line_nr + 1
             SKIP
         ENDDO
     ENDIF
 
     FOR EACH nRecNo IN hb_hKeys(hReorder)
         GO nRecNo
-        field->line_nr := PadL(LTrim(Str(hReorder[nRecNo])), 4)
+        field->line_nr := hReorder[nRecNo]
     NEXT
 
     GO nOldRecNo
-    field->line_nr := PadL(LTrim(Str(nTo)), 4)
+    field->line_nr := nTo
 
     RESTORE KEYS FROM axOldKeys
 
@@ -204,7 +204,7 @@ STATIC PROCEDURE edit()
     SAVE SCREEN TO cOldScreen
 
     @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
-    @ nTop, Int((nRight + nLeft - Len(' Kod ')) / 2) SAY ' Kod '
+    @ nTop, Int(nRight + nLeft - Len(Config():get_config('Code')) / 2) SAY Config():get_config('Code')
     field->code := MemoEdit(RTrim(field->code), nTop + 1, nLeft + 1, nBottom - 1, nRight - 1)
     @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
     @ nTop, Int((nRight + nLeft - Len(' JSON ')) / 2) SAY ' JSON '
@@ -263,7 +263,7 @@ STATIC PROCEDURE rebuild()
                                 , OBJECT_RADIOGROUP, 'RADIOGROUP';
                                )
     LOCAL cType := hMenuItems[hb_ATokens(RTrim(field->code), LINE_SEPARATOR)[1]]
-    LOCAL nLineNr := Val(field->line_nr)
+    LOCAL nLineNr := field->line_nr
     LOCAL acFormCode := Array(0)
     LOCAL nGetPos := 0
     LOCAL hJson
@@ -278,7 +278,7 @@ STATIC PROCEDURE rebuild()
     GO TOP
     DO WHILE !EoF()
         AAdd(acFormCode, RTrim(field->code))
-        IF Val(field->line_nr) <= nLineNr
+        IF field->line_nr <= nLineNr
             IF AScan({'WINDOW', 'BOX', 'SAY'}, hMenuItems[hb_ATokens(RTrim(field->code), LINE_SEPARATOR)[1]]) == 0
                 ++nGetPos
             ENDIF
@@ -411,6 +411,44 @@ STATIC PROCEDURE display_form()
 
 RETURN
 
+STATIC PROCEDURE add_window()
+
+    LOCAL axOldKeys
+    LOCAL nOldRecNo := RecNo()
+
+    ZAP KEYS TO axOldKeys
+
+    GO TOP
+
+    IF Left(field->code, Len(OBJECT_WINDOW)) != OBJECT_WINDOW
+
+        GO BOTTOM
+
+        DO WHILE !BoF()
+            field->line_nr := field->line_nr + 1
+            SKIP -1
+        ENDDO
+
+        APPEND BLANK
+
+        field->line_nr := 1
+        field->code := OBJECT_WINDOW + LINE_SEPARATOR;
+                       + CONSTANT + 'N' + '0' + LINE_SEPARATOR;
+                       + CONSTANT + 'N' + '0' + LINE_SEPARATOR;
+                       + CONSTANT + 'N' + LTrim(Str(MaxRow())) + LINE_SEPARATOR;
+                       + CONSTANT + 'N' + LTrim(Str(MaxCol())) + LINE_SEPARATOR;
+                       + CONSTANT + 'C' + Config():get_config('DefaultWindowCreatorBox') + LINE_SEPARATOR;
+                       + CONSTANT + 'C' + Config():get_config('DefaultWindowCreatorColor') + LINE_SEPARATOR;
+                       + CONSTANT + 'C' + Config():get_config('DefaultWindowCreatorShadow')
+    ELSE
+        Inform(Config():get_config('OnlyOneWindowAllowed'))
+    ENDIF
+
+    GO nOldRecNo
+    RESTORE KEYS FROM axOldKeys
+
+RETURN
+
 PROCEDURE change_order()
 
     LOCAL nOldSelect := Select()
@@ -418,8 +456,10 @@ PROCEDURE change_order()
     LOCAL cOldFooter := Window():footer(Config():get_config('ReorderFooter'))
     LOCAL cOldHeader := Window():header(Config():get_config('ReorderHeader'))
     LOCAL acRows := hb_ATokens(field->code, OBJECT_SEPARATOR)
-    LOCAL axStructure := {{'line_nr', 'C', 4, 0}, {'code', 'C', 2056, 0}} 
+    LOCAL axStructure := {{'line_nr', 'N', 4, 0}, {'code', 'C', 2056, 0}} 
     LOCAL lChanged := .F.
+    LOCAL lContinue := .T.
+    LOCAL lCorrect := .T.
     LOCAL oRowBrowse
     LOCAL cOldScreen
     LOCAL axOldKeys
@@ -429,57 +469,69 @@ PROCEDURE change_order()
 
     IF EoF()
         Inform(Config():get_config('NoRecordSelected'))
-        RESTORE KEYS FROM axOldKeys
-        RETURN
+        lContinue := .F.
+    ELSEIF important_form(field->id) .AND. !NoYes(Config():get_config('ImportantForm'))
+        lContinue := .F.
     ENDIF
-
-    SAVE SCREEN TO cOldScreen
-
-    Window():refresh_header()
-    Window():refresh_footer()
-
-    SET KEY K_DEL TO delete_row()
-
-    SET KEY K_F2 TO rebuild()
-    SET KEY K_F3 TO swap()
-    SET KEY K_F4 TO edit()
-    SET KEY K_F5 TO move()
-
-    SET KEY K_F6 TO display_line()
-    SET KEY K_F7 TO display_form()
-
-    SET KEY K_F8 TO move_row_down()
-    SET KEY K_F9 TO move_row_up()
 
     dbCreate('mem:dbReorder', axStructure, hb_Memio(), .T., 'dbReorder')
 
-    FOR i := 1 TO Len(acRows)
-        APPEND BLANK
-        field->line_nr := PadL(LTrim(Str(i)), 4)
-        field->code := acRows[i]
-    NEXT
+    IF lContinue
+        FOR i := 1 TO Len(acRows)
+            APPEND BLANK
+            field->line_nr := i
 
-    INDEX ON field->line_nr TO mem:dbReorderInd
-    GO TOP
+            IF Empty(acRows[i])
+                lCorrect := .F.
+                EXIT
+            ELSE
+                field->code := acRows[i]
+            ENDIF
+        NEXT
+    ENDIF
 
-    @ Window():get_top() + 1, Window():get_left() + 1, Window():get_bottom() - 1, Window():get_right() - 1;
-      ROWBROWSE oRowBrowse ID 'reorder' COLOR Config():get_config('DefaultColor') BORDER Config():get_config('RowBrowseDefaultBox');
-      TITLE Config():get_config('ReorderRowBrowseTitle') ACTION {| oRowBrowse, nKey | row_browse_reorder_search(oRowBrowse, nKey)}
+    IF lCorrect .AND. lContinue
 
-    oRowBrowse:display()
+        SAVE SCREEN TO cOldScreen
 
-    GO TOP
+        SET KEY K_DEL TO delete_row()
+        SET KEY K_F2 TO rebuild()
+        SET KEY K_F3 TO swap()
+        SET KEY K_F4 TO edit()
+        SET KEY K_F5 TO move()
+        SET KEY K_F6 TO display_line()
+        SET KEY K_F7 TO display_form()
+        SET KEY K_F8 TO move_row_down()
+        SET KEY K_F9 TO move_row_up()
+        SET KEY K_F10 TO add_window()
 
-    FOR i := 1 TO Len(acRows)
-        IF field->code != acRows[i]
-            lChanged := .T.
-            EXIT
+        Window():refresh_header()
+        Window():refresh_footer()
+
+        INDEX ON field->line_nr TO mem:dbReorderInd
+        GO TOP
+
+        @ Window():get_top() + 1, Window():get_left() + 1, Window():get_bottom() - 1, Window():get_right() - 1;
+          ROWBROWSE oRowBrowse ID 'reorder' COLOR Config():get_config('DefaultColor') BORDER Config():get_config('RowBrowseDefaultBox');
+          TITLE Config():get_config('ReorderRowBrowseTitle') ACTION {| oRowBrowse, nKey | row_browse_reorder_search(oRowBrowse, nKey)}
+
+        oRowBrowse:display()
+
+        GO TOP
+
+        FOR i := 1 TO Len(acRows)
+            IF field->code != acRows[i]
+                lChanged := .T.
+                EXIT
+            ENDIF
+            SKIP
+        NEXT
+
+        IF lChanged .AND. YesNo(Config():get_config('YesNoSave'))
+            save(nOldRecNo)
         ENDIF
-        SKIP
-    NEXT
-
-    IF lChanged .AND. YesNo(Config():get_config('YesNoSave'))
-        save(nOldRecNo)
+    ELSEIF !lCorrect
+        Inform(Config():get_config('CorruptionDetected'))
     ENDIF
 
     CLOSE

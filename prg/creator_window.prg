@@ -77,41 +77,41 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_window
                 lActiveUpperLeftCorner := !lActiveUpperLeftCorner
             CASE nKey == K_UP
                 IF lActiveUpperLeftCorner 
-                    IF ::get_value(N_TOP_WN) - 1 < ::get_value(N_BOTTOM_WN) .AND. ::get_value(N_TOP_WN) - 1 >= Window():get_top()
+                    IF ::get_value(N_TOP_WN) - 1 <= ::get_value(N_BOTTOM_WN) .AND. ::get_value(N_TOP_WN) >= Window():get_top()
                         ::decrement(N_TOP_WN)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_WN) < ::get_value(N_BOTTOM_WN) - 1 .AND. ::get_value(N_BOTTOM_WN) - 1 >= Window():get_top()
+                    IF ::get_value(N_TOP_WN) <= ::get_value(N_BOTTOM_WN) - 1 .AND. ::get_value(N_BOTTOM_WN) >= Window():get_top()
                         ::decrement(N_BOTTOM_WN)
                     ENDIF
                 ENDIF    
             CASE nKey == K_LEFT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_WN) - 1 < ::get_value(N_RIGHT_WN) .AND. ::get_value(N_LEFT_WN) - 1 >= Window():get_left()
+                    IF ::get_value(N_LEFT_WN) - 1 <= ::get_value(N_RIGHT_WN) .AND. ::get_value(N_LEFT_WN) >= Window():get_left()
                         ::decrement(N_LEFT_WN)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_WN) < ::get_value(N_RIGHT_WN) - 1 .AND. ::get_value(N_RIGHT_WN) - 1 >= Window():get_left()
+                    IF ::get_value(N_LEFT_WN) <= ::get_value(N_RIGHT_WN) - 1 .AND. ::get_value(N_RIGHT_WN) >= Window():get_left()
                         ::decrement(N_RIGHT_WN)
                     ENDIF
                 ENDIF
             CASE nKey == K_DOWN
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_TOP_WN) + 1 < ::get_value(N_BOTTOM_WN) .AND. ::get_value(N_TOP_WN) + 1 <= Window():get_bottom()
+                    IF ::get_value(N_TOP_WN) + 1 <= ::get_value(N_BOTTOM_WN) .AND. ::get_value(N_TOP_WN) <= Window():get_bottom()
                         ::increment(N_TOP_WN)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_WN) < ::get_value(N_BOTTOM_WN) + 1 .AND. ::get_value(N_BOTTOM_WN) + 1 <= Window():get_bottom()
+                    IF ::get_value(N_TOP_WN) <= ::get_value(N_BOTTOM_WN) + 1 .AND. ::get_value(N_BOTTOM_WN) <= Window():get_bottom()
                         ::increment(N_BOTTOM_WN)
                     ENDIF
                 ENDIF
             CASE nKey == K_RIGHT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_WN) + 1 < ::get_value(N_RIGHT_WN) .AND. ::get_value(N_LEFT_WN) + 1 <= Window():get_right()
+                    IF ::get_value(N_LEFT_WN) + 1 <= ::get_value(N_RIGHT_WN) .AND. ::get_value(N_LEFT_WN) <= Window():get_right()
                         ::increment(N_LEFT_WN)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_WN) < ::get_value(N_RIGHT_WN) + 1 .AND. ::get_value(N_RIGHT_WN) + 1 <= Window():get_right()
+                    IF ::get_value(N_LEFT_WN) <= ::get_value(N_RIGHT_WN) + 1 .AND. ::get_value(N_RIGHT_WN) <= Window():get_right()
                         ::increment(N_RIGHT_WN)
                     ENDIF
                 ENDIF

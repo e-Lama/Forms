@@ -52,7 +52,7 @@ You can get subsequent updates using this command:
 
 # How to Build
 
-> At now libgui isn't prepared to build and install on other systems than Linux.
+> At now Forms isn't prepared to build and install on other systems than Linux.
 
 ## On Linux hosts
 

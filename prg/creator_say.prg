@@ -18,10 +18,10 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_say
     LOCAL cOldHeader := Window():header(Config():get_config('CreatorSayHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('CreatorSayFooter'))
     LOCAL nOldWindow := WSelect()
-    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), -1)
+    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), 0)
     LOCAL nLeftLimit := IF(WSelect() == 0, Window():get_left(), 0)
-    LOCAL nBottomLimit := IF(WSelect() == 0, Window():get_bottom(), MaxRow())
-    LOCAL nRightLimit := IF(WSelect() == 0, Window():get_right(), MaxCol())
+    LOCAL nBottomLimit := IF(WSelect() == 0, Window():get_bottom(), MaxRow() - 1)
+    LOCAL nRightLimit := IF(WSelect() == 0, Window():get_right(), MaxCol() - 1)
     LOCAL lFinish := .F.
     LOCAL nTop := WRow()
     LOCAL nLeft := WCol()
@@ -82,9 +82,9 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_say
                 RESTORE SCREEN FROM cScreen
             ENDIF
 
-            prepare_form(ACopy(xFormCode, Array(Val(field->line_nr) - 1), 1, Val(field->line_nr) - 1))
+            prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
             ::display_form()
-            prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - Val(field->line_nr)), Val(field->line_nr) + 1))
+            prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
         ELSE
             IF WSelect() > 0
                 WSelect(0)
@@ -101,19 +101,19 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_say
 
         DO CASE
             CASE nKey == K_UP
-                IF ::get_value(N_ROW_SAY) - 1 >= nTopLimit
+                IF ::get_value(N_ROW_SAY) >= nTopLimit
                     ::decrement(N_ROW_SAY)
                 ENDIF
             CASE nKey == K_LEFT
-                IF ::get_value(N_COL_SAY) - 1 >= nLeftLimit
+                IF ::get_value(N_COL_SAY) >= nLeftLimit
                     ::decrement(N_COL_SAY)
                 ENDIF
             CASE nKey == K_DOWN
-                IF ::get_value(N_ROW_SAY) + 1 <= nBottomLimit
+                IF ::get_value(N_ROW_SAY) <= nBottomLimit
                     ::increment(N_ROW_SAY)
                 ENDIF
             CASE nKey == K_RIGHT
-                IF ::get_value(N_COL_SAY) + 1 <= nRightLimit
+                IF ::get_value(N_COL_SAY) <= nRightLimit
                     ::increment(N_COL_SAY)
                 ENDIF
             CASE nKey == K_ENTER

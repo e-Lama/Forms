@@ -10,7 +10,7 @@ REQUEST HB_CODEPAGE_UTF8EX
 
 PROCEDURE main()
 
-    MEMVAR GETLIST, oErr
+    MEMVAR GETLIST, oError
 
     LOCAL oRowBrowse
 
@@ -50,8 +50,8 @@ PROCEDURE main()
         ELSE
             Config():get_config('InitConfigFailure')
         ENDIF
-    RECOVER USING oErr
-        standard_error_handler(oErr)
+    RECOVER USING oError
+        standard_error_handler(oError)
     END SEQUENCE
 
 RETURN
@@ -69,7 +69,7 @@ INIT PROCEDURE prepare()
     SET DATE TO GERMAN
     SET SCOREBOARD OFF
     hb_cdpSelect('UTF8EX') 
-    //SetCancel(.F.)
+    SetCancel(.F.)
 
     CLS
 
@@ -98,12 +98,6 @@ STATIC PROCEDURE quit_program()
     RESTORE KEYS FROM axOldKeys
 
 RETURN
-
-STATIC FUNCTION important_form(cID)
-
-    LOCAL acImportantForms := {'CREATE_FORM', 'SET_DISTINCT_NAME', 'WHERE_MOVE', 'SWAP', 'GET_VARIABLE'}
-
-RETURN AScan(acImportantForms, AllTrim(cId)) != 0
 
 STATIC PROCEDURE display_form()
 
@@ -291,6 +285,8 @@ RETURN
 
 STATIC PROCEDURE fast_edit()
 
+    LOCAL cOldHeader := Window():header(Config():get_config('MemoEditHeader'))
+    LOCAL cOldFooter := Window():footer(Config():get_config('MemoEditFooter'))
     LOCAL nOldCursor := Set(_SET_CURSOR)
     LOCAL nTop := Window():get_top() + 1
     LOCAL nLeft := Window():get_left() + 1
@@ -308,19 +304,24 @@ STATIC PROCEDURE fast_edit()
         //...
     ELSE
 
+        Window():refresh_header()
+        Window():refresh_footer()
+
         @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
-        @ nTop, Int((nRight + nLeft - Len(' Kod ')) / 2) SAY ' Kod '
+        @ nTop, Int((nRight + nLeft - Len(Config():get_config('Code'))) / 2) SAY Config():get_config('Code')
         field->code := MemoEdit(field->code, nTop + 1, nLeft + 1, nBottom - 1, nRight - 1)
         @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
         @ nTop, Int((nRight + nLeft - Len(' JSON ')) / 2) SAY ' JSON '
         dbVariables->json := MemoEdit(dbVariables->json, nTop + 1, nLeft + 1, nBottom - 1, nRight - 1)
-
-        SET CURSOR (cast(nOldCursor, 'L'))
-
     ENDIF
 
-    RESTORE KEYS FROM axOldKeys
+    Window():header(cOldHeader)
+    Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen
+    Window():refresh_header()
+    Window():refresh_footer()
+    SET CURSOR (cast(nOldCursor, 'L'))
+    RESTORE KEYS FROM axOldKeys
 
 RETURN
 

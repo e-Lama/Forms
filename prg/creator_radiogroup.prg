@@ -18,10 +18,10 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_radiogroup
     LOCAL cOldHeader := Window():header(Config():get_config('CreatorRadiogroupHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('CreatorRadiogroupFooter'))
     LOCAL nOldWindow := WSelect()
-    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), -1)
+    LOCAL nTopLimit := IF(WSelect() == 0, Window():get_top(), 0)
     LOCAL nLeftLimit := IF(WSelect() == 0, Window():get_left(), 0)
-    LOCAL nBottomLimit := IF(WSelect() == 0, Window():get_bottom(), MaxRow())
-    LOCAL nRightLimit := IF(WSelect() == 0, Window():get_right(), MaxCol())
+    LOCAL nBottomLimit := IF(WSelect() == 0, Window():get_bottom(), MaxRow() - 1)
+    LOCAL nRightLimit := IF(WSelect() == 0, Window():get_right(), MaxCol() - 1)
     LOCAL lActiveUpperLeftCorner := .T.
     LOCAL lFinish := .F.
     LOCAL nTop := WRow()
@@ -89,9 +89,9 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_radiogroup
                 RESTORE SCREEN FROM cScreen
             ENDIF
 
-            prepare_form(ACopy(xFormCode, Array(Val(field->line_nr) - 1), 1, Val(field->line_nr) - 1))
+            prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
             ::display_form()
-            prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - Val(field->line_nr)), Val(field->line_nr) + 1))
+            prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
         ELSE
             IF WSelect() > 0
                 WSelect(0)
@@ -106,7 +106,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_radiogroup
 
         IF ValType(aoWasGetList) == 'A' .AND. Len(aoWasGetList) != 0 .AND. Len(GETLIST) != 0
             IF ValType(xFormCode) == 'A'
-                aoWasGetList[xGetPos] := __objClone(GETLIST[xGetPos])//__objClone(ATail(GETLIST))
+                aoWasGetList[xGetPos] := __objClone(GETLIST[xGetPos])
             ELSE
                 aoWasGetList[Len(aoWasGetList)] := __objClone(ATail(GETLIST))
             ENDIF
@@ -123,41 +123,41 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_radiogroup
                 lActiveUpperLeftCorner := !lActiveUpperLeftCorner
             CASE nKey == K_UP
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_TOP_RGB) - 1 < ::get_value(N_BOTTOM_RGB).AND. ::get_value(N_TOP_RGB) - 1 >= nTopLimit
+                    IF ::get_value(N_TOP_RGB) - 1 < ::get_value(N_BOTTOM_RGB).AND. ::get_value(N_TOP_RGB) >= nTopLimit
                         ::decrement(N_TOP_RGB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_RGB) < ::get_value(N_BOTTOM_RGB) - 1 .AND. ::get_value(N_BOTTOM_RGB) - 1 >= nTopLimit
+                    IF ::get_value(N_TOP_RGB) < ::get_value(N_BOTTOM_RGB) - 1 .AND. ::get_value(N_BOTTOM_RGB) >= nTopLimit
                         ::decrement(N_BOTTOM_RGB)
                     ENDIF
                 ENDIF    
             CASE nKey == K_LEFT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_RGB) - 1 < ::get_value(N_RIGHT_RGB) .AND. ::get_value(N_LEFT_RGB) - 1 >= nLeftLimit
+                    IF ::get_value(N_LEFT_RGB) - 1 < ::get_value(N_RIGHT_RGB) .AND. ::get_value(N_LEFT_RGB) >= nLeftLimit
                         ::decrement(N_LEFT_RGB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_RGB) < ::get_value(N_RIGHT_RGB) - 1 .AND. ::get_value(N_RIGHT_RGB) - 1 >= nLeftLimit
+                    IF ::get_value(N_LEFT_RGB) < ::get_value(N_RIGHT_RGB) - 1 .AND. ::get_value(N_RIGHT_RGB) >= nLeftLimit
                         ::decrement(N_RIGHT_RGB)
                     ENDIF
                 ENDIF
             CASE nKey == K_DOWN
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_TOP_RGB) + 1 < ::get_value(N_BOTTOM_RGB) .AND. ::get_value(N_TOP_RGB) + 1 <= nBottomLimit
+                    IF ::get_value(N_TOP_RGB) + 1 < ::get_value(N_BOTTOM_RGB) .AND. ::get_value(N_TOP_RGB) <= nBottomLimit
                         ::increment(N_TOP_RGB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_RGB) < ::get_value(N_BOTTOM_RGB) + 1 .AND. ::get_value(N_BOTTOM_RGB) + 1 <= nBottomLimit
+                    IF ::get_value(N_TOP_RGB) < ::get_value(N_BOTTOM_RGB) + 1 .AND. ::get_value(N_BOTTOM_RGB) <= nBottomLimit
                         ::increment(N_BOTTOM_RGB)
                     ENDIF
                 ENDIF
             CASE nKey == K_RIGHT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_RGB) + 1 < ::get_value(N_RIGHT_RGB) .AND. ::get_value(N_LEFT_RGB) + 1 <= nRightLimit
+                    IF ::get_value(N_LEFT_RGB) + 1 < ::get_value(N_RIGHT_RGB) .AND. ::get_value(N_LEFT_RGB) <= nRightLimit
                         ::increment(N_LEFT_RGB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_RGB) < ::get_value(N_RIGHT_RGB) + 1 .AND. ::get_value(N_RIGHT_RGB) + 1 <= nRightLimit
+                    IF ::get_value(N_LEFT_RGB) < ::get_value(N_RIGHT_RGB) + 1 .AND. ::get_value(N_RIGHT_RGB) <= nRightLimit
                         ::increment(N_RIGHT_RGB)
                     ENDIF
                 ENDIF

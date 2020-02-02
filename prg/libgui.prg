@@ -6,18 +6,14 @@
 FUNCTION create_initial_config_hash()
 
     LOCAL hConfig := hb_Hash(;
-                            'GetHorizontalScrollingSize', '30';
-                            , 'RowBrowseDefaultBox', HB_B_SINGLE_DOUBLE_UNI;
-                            , 'DefaultBox', HB_B_DOUBLE_UNI;
-                            , 'WindowBorder', HB_B_SINGLE_UNI;
                             ;/*** FOOTERS ***/
-                            , 'ProgramFirstFooter', 'ESC - quit  DEL - delete  F1 - reorder  F2 - create  F3 - add  F4 - preview  F5 - fast edit  F6 - clone  F7 - change ID';
+                            'ProgramFirstFooter', 'ESC - quit  DEL - delete  F1 - reorder  F2 - create  F3 - add  F4 - preview  F5 - fast edit  F6 - clone  F7 - change ID';
                             , 'DisplayFormFooter', 'Press any key to quit the preview';
                             , 'ReorderDisplayForm', 'ALT+ENTER - READ  another key - quit';
                             , 'CreateNewFormFooter', "Enter the form's unique language and ID";
                             , 'ChangeIDFooter', "Enter the form's unique language and/or ID";
                             , 'CloneFooter', "Enter the form's unique language and/or ID";
-                            , 'ReorderFooter', 'ESC - quit  DEL - delete  F2 - rebuild  F3 - change  F4 - edit  F5 - move  F6 - preview line  F7 - preview form  F8 - move down  F9 - move up';
+                            , 'ReorderFooter', 'ESC - quit  DEL - delete  F2 - rebuild  F3 - change  F4 - edit  F5 - move  F6/F7 - preeview line/form  F8/F9 - move down/up  F10 - add window';
                             , 'CreatorWindowFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorBoxFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorSayFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+ENTER - READ  ESC - quit"; 
@@ -27,6 +23,7 @@ FUNCTION create_initial_config_hash()
                             , 'CreatorRadiogroupFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+ENTER - READ  ESC - quit"; 
                             , 'MenuDefaultFooter', 'Select the item';
                             , 'SaveFooter', 'SPACE - change the save method  ENTER - change the variable name';
+                            , 'MemoEditFooter', 'ESC - quit without save  CTRL+W - save  INS - insert/overwrite mode';
                             ;/*** HEADERS ***/
                             , 'ProgramFirstHeader', 'Welcome back! Select the action you are interested in';
                             , 'DisplayFormHeader', 'Form preview';
@@ -44,6 +41,7 @@ FUNCTION create_initial_config_hash()
                             , 'CreatorRadiogroupHeader', 'Buttons wizard';
                             , 'FormFastEditHeader', 'Fast edit mode';
                             , 'SaveHeader', 'Save the form';
+                            , 'MemoEditHeader', 'Edit the text';
                             ;/*** TITLES ***/
                             , 'MainRowBrowseTitle', ' Forms ';
                             , 'ReorderRowBrowseTitle', ' Reorder ';
@@ -82,17 +80,12 @@ FUNCTION create_initial_config_hash()
                             , 'IncorrectValues', 'Incorrect values;The operation is going to be terminated';
                             , 'CreateWithoutWindow', 'Should I create the form without a window?';
                             , 'NoRecordSelected', 'No record selected';
-                            , 'DefaultWindowCreatorColor', 'R/W,N/W,N/W,N/W,N/W';
-                            , 'DefaultWindowCreatorBox', HB_B_DOUBLE_UNI;
-                            , 'DefaultWindowCreatorShadow', 'N+';
-                            , 'DefaultBoxCreatorBox', HB_B_DOUBLE_UNI;
-                            , 'DefaultBoxCreatorColor', 'R/W,N/W,N/W,N/W,N/W';
-                            , 'DefaultSayCreatorColor', 'N/W,W/N,N/W,N/W,N/W';
-                            , 'DefaultGetSayCreatorColor', 'N/W,W/N,N/W,N/W,N/W';
-                            , 'DefaultGetGetCreatorColor', 'N/W,W/N,GR/B,G/B,BG/G';
-                            , 'DefaultCheckboxCreatorColor', 'GR/B,RB/G,BG/R,B/R,';
-                            , 'DefaultListboxCreatorColor', 'RB/G,R/B,BG/R,BG/G,G/B,N/W,W/N,';
-                            , 'DefaultRadiogroupCreatorColor', 'GR/B,RB/B,BG/R,,B/R';
+                            , 'ItIsVariable', "The value represents the form's variable and can't be saved as a constant!";
+                            , 'ItIsNotVariable', "The value represents the form's constant! You have to change it to a variable before executing the operation";
+                            , 'CantCreateEmptyForm', "The form's ID and the form's language can't be empty!";
+                            , 'CriticalError', 'Critical error! Program is going to be closed!';
+                            , 'ImportantForm', "The selected form is crucial for the program. It's modification or deletion may cause irreparable damage. Backup is recommended. Continue anyway?";
+                            , 'OnlyOneWindowAllowed', 'Only one window per form is allowed';
                             ;/*** INNER LIB ***/
                             , 'Title', 'Forms v0.1 eLama';
                             , 'CantCreateConfigFile', 'Creating of the configuration file has failed';
@@ -104,20 +97,33 @@ FUNCTION create_initial_config_hash()
                             , 'DefaultPrintMessageOption', 'Ok';
                             , 'DefaultYes', 'Yes';
                             , 'DefaultNo', 'No';
+                            , 'DefaultYesNoAllowMove', .T.;
+                            , 'DefaultDialogAllowMove', .T.;
+                            , 'DefaultInformAllowMove', .T.;
+                            , 'RowBrowseDefaultBox', HB_B_SINGLE_DOUBLE_UNI;
+                            , 'DefaultBox', HB_B_DOUBLE_UNI;
+                            , 'WindowBorder', HB_B_SINGLE_UNI;
                             ;/*** OTHER ***/
+                            , 'DefaultWindowCreatorColor', 'R/W,N/W,N/W,N/W,N/W';
+                            , 'DefaultWindowCreatorBox', HB_B_DOUBLE_UNI;
+                            , 'DefaultWindowCreatorShadow', 'N+';
+                            , 'DefaultBoxCreatorBox', HB_B_DOUBLE_UNI;
+                            , 'DefaultBoxCreatorColor', 'R/W,N/W,N/W,N/W,N/W';
+                            , 'DefaultSayCreatorColor', 'N/W,W/N,N/W,N/W,N/W';
+                            , 'DefaultGetSayCreatorColor', 'N/W,W/N,N/W,N/W,N/W';
+                            , 'DefaultGetGetCreatorColor', 'N/W,W/N,GR/B,G/B,BG/G';
+                            , 'DefaultCheckboxCreatorColor', 'GR/B,RB/G,BG/R,B/R,';
+                            , 'DefaultListboxCreatorColor', 'RB/G,R/B,BG/R,BG/G,G/B,N/W,W/N,';
+                            , 'DefaultRadiogroupCreatorColor', 'GR/B,RB/B,BG/R,,B/R';
+                            , 'SaveColor', 'W/N,N/W,W*/N,N*/W';
                             , 'VariablesDefinitions', 'dbVariables.dbf';
                             , 'dbfPath', 'dbf/';
                             , 'ntxPath', 'ntx/';
                             , 'SaveAsConstant', 'constant';
                             , 'SaveAsVariable', 'variable';
-                            , 'SaveColor', 'W/N,N/W,W*/N,N*/W';
-                            , 'ItIsVariable', "The value represents the form's variable and can't be saved as a constant!";
-                            , 'ItIsNotVariable', "The value represents the form's constant! You have to change it to a variable before executing the operation";
                             , 'Language', 'ENGLISH';
-                            , 'CantCreateEmptyForm', "The form's ID and the form's language can't be empty!";
-                            , 'CriticalError', 'Critical error! Program is going to be closed!';
-                            , 'ImportantForm', "The selected form is crucial for the program. It's modification or deletion may cause irreparable damage. Backup is recommended. Continue anyway?";
                             , 'Found', 'Found: ';
+                            , 'Code', ' Code ';
                             )
 RETURN hConfig
 
