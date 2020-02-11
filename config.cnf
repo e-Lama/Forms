@@ -111,5 +111,6 @@
   "SaveAsVariable": "variable",
   "Language": "ENGLISH",
   "Found": "Found: ",
-  "Code": " Code "
+  "Code": " Code ",
+  "CantLock": "Somebody is using this record at the moment"
 }

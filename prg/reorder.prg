@@ -455,11 +455,11 @@ PROCEDURE change_order()
     LOCAL nOldRecNo := RecNo()
     LOCAL cOldFooter := Window():footer(Config():get_config('ReorderFooter'))
     LOCAL cOldHeader := Window():header(Config():get_config('ReorderHeader'))
-    LOCAL acRows := hb_ATokens(field->code, OBJECT_SEPARATOR)
     LOCAL axStructure := {{'line_nr', 'N', 4, 0}, {'code', 'C', 2056, 0}} 
     LOCAL lChanged := .F.
     LOCAL lContinue := .T.
     LOCAL lCorrect := .T.
+    LOCAL acRows
     LOCAL oRowBrowse
     LOCAL cOldScreen
     LOCAL axOldKeys
@@ -472,11 +472,16 @@ PROCEDURE change_order()
         lContinue := .F.
     ELSEIF important_form(field->id) .AND. !NoYes(Config():get_config('ImportantForm'))
         lContinue := .F.
+    ELSEIF !dbRLock(RecNo()) .OR. !dbVariables->(dbRLock(RecNo()))
+        Inform(Config():get_config('CantLock'))
     ENDIF
 
     dbCreate('mem:dbReorder', axStructure, hb_Memio(), .T., 'dbReorder')
 
     IF lContinue
+
+        acRows := hb_ATokens(dbForms->code, OBJECT_SEPARATOR)
+
         FOR i := 1 TO Len(acRows)
             APPEND BLANK
             field->line_nr := i
@@ -536,6 +541,7 @@ PROCEDURE change_order()
 
     CLOSE
     dbDrop('mem:dbReorder')
+    UNLOCK ALL
     SELECT (nOldSelect)
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
@@ -563,7 +569,7 @@ FUNCTION row_browse_reorder_search(oRowBrowse, nKey)
         IF Len(cCurrentString) > 0
             @ oRowBrowse:bottom(), oRowBrowse:left() SAY 'Found: ' + cCurrentString
         ENDIF
-    ELSE
+    ELSEIF !hb_hHasKey(oRowBrowse:keys_map(), nKey) .AND. !Empty(IndexKey())
         IF oRowBrowse:search(PadL(cCurrentString + Chr(nKey), 4))
             nReturn := ROWBROWSE_SEARCH
             oRowBrowse:search_keys(PadL(cCurrentString + Chr(nKey), 4))

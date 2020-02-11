@@ -1,6 +1,7 @@
 #include "fileio.ch"
 #include "inkey.ch"
 #include "box.ch"
+#include "hbgtinfo.ch"
 
 #include "functions.ch"
 #include "rowbrowse.ch"
@@ -15,6 +16,8 @@ PROCEDURE main()
     LOCAL oRowBrowse
 
     PUBLIC GETLIST
+
+    hb_gtInfo(HB_GTI_WINTITLE, 'Forms')
 
     BEGIN SEQUENCE
 
@@ -188,27 +191,40 @@ STATIC PROCEDURE create_new_form()
             IF Found()
                 Inform(Config():get_config('InformRecordExists'))
             ELSE
-                APPEND BLANK
-                field->id := cNewId
-                field->language := cNewLanguage
-                SELECT dbVariables
-                APPEND BLANK
-                field->id := cNewId
-                field->language := cNewLanguage
-                SELECT dbForms
-                COMMIT
+                IF append()
+                    field->id := cNewId
+                    field->language := cNewLanguage
 
-                IF YesNo(Config():get_config('CreateWithoutWindow')) .OR. Creator_window():edit_form()
-                    add_to_form()
+                    SELECT dbVariables
+
+                    IF append()
+                        field->id := cNewId
+                        field->language := cNewLanguage
+
+                        SELECT dbForms
+                        COMMIT
+
+                        IF YesNo(Config():get_config('CreateWithoutWindow')) .OR. Creator_window():edit_form()
+                            add_to_form()
+                        ELSE
+                            WClose()
+                            delete_form()
+                            GO nOldRecNo
+                        ENDIF
+                    ELSE
+                        SELECT dbForms
+                        DELETE
+                        PACK
+                        Inform(Config():get_config('CantLock'))
+                    ENDIF
                 ELSE
-                    WClose()
-                    delete_form()
-                    GO nOldRecNo
+                    Inform(Config():get_config('CantLock'))
                 ENDIF
             ENDIF
         ENDIF
     ENDIF
 
+    UNLOCK ALL
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen
@@ -235,6 +251,11 @@ STATIC PROCEDURE add_to_form()
         RESTORE KEYS FROM axOldKeys
         RETURN
     ELSEIF important_form(field->id) .AND. !NoYes(Config():get_config('ImportantForm'))
+        RESTORE KEYS FROM axOldKeys
+        RETURN
+    ELSEIF !dbRLock(RecNo()) .AND. !dbVariables->(dbRLock(RecNo()))
+        Inform(Config():get_config('CantLock'))
+        UNLOCK ALL
         RESTORE KEYS FROM axOldKeys
         RETURN
     ENDIF
@@ -272,6 +293,7 @@ STATIC PROCEDURE add_to_form()
         dbForms->code := Left(dbForms->code, Len(dbForms->code) - Len(OBJECT_SEPARATOR))
     ENDIF
 
+    UNLOCK ALL
     WClose()
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
@@ -302,6 +324,8 @@ STATIC PROCEDURE fast_edit()
         Inform(Config():get_config('NoRecordSelected'))
     ELSEIF important_form(field->id) .AND. !NoYes(Config():get_config('ImportantForm'))
         //...
+    ELSEIF !dbRLock(RecNo()) .OR. !dbVariables->(dbRLock(RecNo()))
+        Inform(Config():get_config('CantLock'))
     ELSE
 
         Window():refresh_header()
@@ -313,8 +337,11 @@ STATIC PROCEDURE fast_edit()
         @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
         @ nTop, Int((nRight + nLeft - Len(' JSON ')) / 2) SAY ' JSON '
         dbVariables->json := MemoEdit(dbVariables->json, nTop + 1, nLeft + 1, nBottom - 1, nRight - 1)
+
+        UNLOCK ALL
     ENDIF
 
+    UNLOCK ALL
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen
@@ -333,8 +360,9 @@ STATIC PROCEDURE ask_delete_form()
 
     IF EoF()
         Inform(Config():get_config('NoRecordSelected'))
+    ELSEIF !dbRLock(RecNo()) .OR. !dbVariables->(dbRLock(RecNo()))
+        Inform(Config():get_config('CantLock'))
     ELSE
-
         IF NoYes(Config():get_config('YesNoDeleteForm'))
             IF important_form(field->id) 
                 IF NoYes(Config():get_config('ImportantForm'))
@@ -346,6 +374,7 @@ STATIC PROCEDURE ask_delete_form()
         ENDIF
     ENDIF
 
+    UNLOCK ALL
     RESTORE KEYS FROM axOldKeys
 
 RETURN
@@ -396,6 +425,8 @@ STATIC PROCEDURE change_id()
         Inform(Config():get_config('NoRecordSelected'))
     ELSEIF important_form(field->id) .AND. !NoYes(Config():get_config('ImportantForm'))
         //...
+    ELSEIF !dbRLock(RecNo()) .OR. !dbVariables->(dbRLock(RecNo()))
+        Inform(Config():get_config('CantLock'))
     ELSEIF NoYes(Config():get_config('YesNoFormIdLanguageChange'))
 
         Window():refresh_header()
@@ -440,6 +471,7 @@ STATIC PROCEDURE change_id()
 
     ENDIF
 
+    UNLOCK ALL
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen
@@ -502,21 +534,35 @@ STATIC PROCEDURE clone()
                 Inform(Config():get_config('InformRecordExists'))
             ELSEIF YesNo(Config():get_config('YesNoSave'))
                 lSuccess := .T.
-                APPEND BLANK
-                field->id := cNewId
-                field->language := cNewLanguage
-                field->code := cCode
-                SELECT dbVariables
-                APPEND BLANK
-                field->id := cNewId
-                field->language := cNewLanguage
-                field->json := cJson
-                SELECT dbForms
-                COMMIT
+
+                IF append()
+                    field->id := cNewId
+                    field->language := cNewLanguage
+                    field->code := cCode
+
+                    SELECT dbVariables
+
+                    IF append()
+                        field->id := cNewId
+                        field->language := cNewLanguage
+                        field->json := cJson
+
+                        SELECT dbForms
+                        COMMIT
+                    ELSE
+                        SELECT dbForms
+                        DELETE
+                        PACK
+                        Inform(Config():get_config('CantLock'))
+                    ENDIF
+                ELSE
+                    Inform(Config():get_config('CantLock'))
+                ENDIF
             ENDIF
         ENDIF
     ENDDO
 
+    UNLOCK ALL
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen

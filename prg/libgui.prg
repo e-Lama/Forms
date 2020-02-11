@@ -124,6 +124,7 @@ FUNCTION create_initial_config_hash()
                             , 'Language', 'ENGLISH';
                             , 'Found', 'Found: ';
                             , 'Code', ' Code ';
+                            , 'CantLock', 'Somebody is using this record at the moment';
                             )
 RETURN hConfig
 
@@ -146,7 +147,7 @@ FUNCTION row_browse_main_search(oRowBrowse, nKey)
         IF Len(cCurrentString) > 0
             @ oRowBrowse:bottom(), oRowBrowse:left() SAY Config():get_config('Found') + cCurrentString
         ENDIF
-    ELSE
+    ELSEIF !hb_hHasKey(oRowBrowse:keys_map(), nKey) .AND. !Empty(IndexKey())
         IF oRowBrowse:search(cCurrentString + Upper(Chr(nKey)))
             nReturn := ROWBROWSE_SEARCH
             oRowBrowse:search_keys(cCurrentString + Upper(Chr(nKey)))
