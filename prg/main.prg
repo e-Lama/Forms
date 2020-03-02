@@ -239,7 +239,7 @@ STATIC PROCEDURE add_to_form()
     LOCAL cOldHeader := Window():header(Config():get_config('AddToFormHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('MenuDefaultFooter'))
     LOCAL aoOldGetList := AClone(GETLIST)
-    LOCAL acMenuItems := {'BOX', 'SAY', 'GET', 'CHECKBOX', 'LISTBOX', 'RADIOGROUP'}
+    LOCAL acMenuItems := {'BOX', 'SAY', 'GET', 'CHECKBOX', 'LISTBOX', 'RADIOGROUP', 'PUSHBUTTON'}
     LOCAL nChoose := 1
     LOCAL axOldKeys
     LOCAL cOldScreen

@@ -21,6 +21,7 @@ FUNCTION create_initial_config_hash()
                             , 'CreatorCheckboxFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorListboxFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+Z - expand the list  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorRadiogroupFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+ENTER - READ  ESC - quit"; 
+                            , 'CreatorPushbuttonFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+ENTER - READ  ESC - quit"; 
                             , 'MenuDefaultFooter', 'Select the item';
                             , 'SaveFooter', 'SPACE - change the save method  ENTER - change the variable name';
                             , 'MemoEditFooter', 'ESC - quit without save  CTRL+W - save  INS - insert/overwrite mode';
@@ -39,6 +40,7 @@ FUNCTION create_initial_config_hash()
                             , 'CreatorCheckboxHeader', 'Checkbox wizard';
                             , 'CreatorListboxHeader', 'Listbox wizard';
                             , 'CreatorRadiogroupHeader', 'Buttons wizard';
+                            , 'CreatorPushbuttonHeader', 'Pushbutton wizard';
                             , 'FormFastEditHeader', 'Fast edit mode';
                             , 'SaveHeader', 'Save the form';
                             , 'MemoEditHeader', 'Edit the text';
@@ -115,6 +117,7 @@ FUNCTION create_initial_config_hash()
                             , 'DefaultCheckboxCreatorColor', 'GR/B,RB/G,BG/R,B/R,';
                             , 'DefaultListboxCreatorColor', 'RB/G,R/B,BG/R,BG/G,G/B,N/W,W/N,';
                             , 'DefaultRadiogroupCreatorColor', 'GR/B,RB/B,BG/R,,B/R';
+                            , 'DefaultPushbuttonCreatorColor', 'GR/B,RB/G,BG/R,B/R,N/W';
                             , 'SaveColor', 'W/N,N/W,W*/N,N*/W';
                             , 'VariablesDefinitions', 'dbVariables.dbf';
                             , 'dbfPath', 'dbf/';
@@ -130,9 +133,9 @@ RETURN hConfig
 
 FUNCTION row_browse_main_search(oRowBrowse, nKey)
 
+    LOCAL nOldRecNo := RecNo()
     LOCAL cCurrentString := oRowBrowse:search_keys()
     LOCAL nReturn := ROWBROWSE_NOTHING
-    LOCAL nOldRecNo := RecNo()
 
     IF AScan({K_DOWN, K_UP, K_HOME, K_END, K_PGUP, K_PGDN}, nKey) != 0
         oRowBrowse:search_keys('')

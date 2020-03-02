@@ -1,4 +1,4 @@
-# Welcome to libgui
+# Welcome to Forms
 
 Form is program which allows you creating... forms. It uses libgui.
 

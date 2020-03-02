@@ -261,6 +261,7 @@ STATIC PROCEDURE rebuild()
                                 , OBJECT_CHECKBOX, 'CHECKBOX';
                                 , OBJECT_LISTBOX, 'LISTBOX';
                                 , OBJECT_RADIOGROUP, 'RADIOGROUP';
+                                , OBJECT_PUSHBUTTON, 'PUSHBUTTON';
                                )
     LOCAL cType := hMenuItems[hb_ATokens(RTrim(field->code), LINE_SEPARATOR)[1]]
     LOCAL nLineNr := field->line_nr

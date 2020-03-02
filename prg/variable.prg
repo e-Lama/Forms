@@ -154,12 +154,16 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
             SWITCH cType
                 CASE 'C'
                     hVariables['picture'] := Replicate('X', Len(xValue))
+                    EXIT
                 CASE 'N'
                     hVariables['picture'] := Replicate('9', Len(Str(0)))
+                    EXIT
                 CASE 'L'
-                    hVariables['picture'] := '@Y'
+                    hVariables['picture'] := 'Y'
+                    EXIT
                 CASE 'D'
                     hVariables['picture'] := '@D'
+                    EXIT
             ENDSWITCH
 
             GETLIST := {}

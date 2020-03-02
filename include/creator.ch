@@ -13,6 +13,7 @@
 #define OBJECT_CHECKBOX 'GC'
 #define OBJECT_LISTBOX 'GL'
 #define OBJECT_RADIOGROUP 'GR'
+#define OBJECT_PUSHBUTTON 'PB'
 
 //WINDOW
 #define N_TOP_WN 1
@@ -101,3 +102,16 @@
 #define N_COL_RBT 2
 #define C_CAPTION_RBT 3
 #define C_VALUE_RBT 4
+
+//PUSHBUTTON
+#define N_ROW_PSB 1
+#define N_COL_PSB 2
+#define L_ID_VAR_PSB 3
+#define C_CAPTION_PSB 4
+#define C_MESSAGE_PSB 5
+#define C_WHEN_FNC_PSB 6
+#define C_VALID_FNC_PSB 7
+#define C_COLOR_PSB 8
+#define C_FOCUS_FNC_PSB 9
+#define C_STATE_PSB 10
+#define C_STYLE_PSB 11
