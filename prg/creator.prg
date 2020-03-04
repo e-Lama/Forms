@@ -599,37 +599,37 @@ METHOD make_form_array(xCode) CLASS Creator
 
         DO CASE
             CASE Creator():cType == OBJECT_WINDOW
-                Creator():aoVariables := {Variable():new('Top';
+                Creator():aoVariables := {Variable():new(IF(::is_variable(acForm, 2), ::extract_name(acForm, 2), 'Top');
                                                         , ::is_variable(acForm, 2);
                                                         , {::extract_value(acForm, 2, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= Window():get_top() .AND. Val(oGet:buffer) <= Window():get_bottom()}};
                                                         );
-                                        , Variable():new('Left';
+                                        , Variable():new(IF(::is_variable(acForm, 3), ::extract_name(acForm, 3), 'Left');
                                                         , ::is_variable(acForm, 3);
                                                         , {::extract_value(acForm, 3, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= Window():get_left()  .AND. Val(oGet:buffer) <= Window():get_right()}};
                                                         );
-                                        , Variable():new('Bottom';
+                                        , Variable():new(IF(::is_variable(acForm, 4), ::extract_name(acForm, 4), 'Bottom');
                                                         , ::is_variable(acForm, 4);
                                                         , {::extract_value(acForm, 4, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= Window():get_top() .AND. Val(oGet:buffer) <= Window():get_bottom()}};
                                                         );
-                                        , Variable():new('Right';
+                                        , Variable():new(IF(::is_variable(acForm, 5), ::extract_name(acForm, 5), 'Right');
                                                         , ::is_variable(acForm, 5);
                                                         , {::extract_value(acForm, 5, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= Window():get_left() .AND. Val(oGet:buffer) <= Window():get_right()}};
                                                         );
-                                        , Variable():new('Box';
+                                        , Variable():new(IF(::is_variable(acForm, 6), ::extract_name(acForm, 6), 'Box');
                                                         , ::is_variable(acForm, 6);
                                                         , {::extract_value(acForm, 6, hJson)};
                                                         , {'C'};
                                                         , {{| oGet | is_box(AllTrim(oGet:buffer))}};
                                                         );
-                                        , Variable():new('Color';
+                                        , Variable():new(IF(::is_variable(acForm, 7), ::extract_name(acForm, 7), 'Color');
                                                         , ::is_variable(acForm, 7);
                                                         , {::extract_value(acForm, 7, hJson)};
                                                         , {'C'};
@@ -639,37 +639,37 @@ METHOD make_form_array(xCode) CLASS Creator
                                          , ::create_window_form_shadow(acForm, 8, hJson);
                                         }
             CASE Creator():cType == OBJECT_BOX
-                Creator():aoVariables := {Variable():new('Top';
+                Creator():aoVariables := {Variable():new(IF(::is_variable(acForm, 2), ::extract_name(acForm, 2), 'Top');
                                                         , ::is_variable(acForm, 2);
                                                         , {::extract_value(acForm, 2, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
                                                         );
-                                        , Variable():new('Left';
+                                        , Variable():new(IF(::is_variable(acForm, 3), ::extract_name(acForm, 3), 'Left');
                                                         , ::is_variable(acForm, 3);
                                                         , {::extract_value(acForm, 3, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                         );
-                                        , Variable():new('Bottom';
+                                        , Variable():new(IF(::is_variable(acForm, 4), ::extract_name(acForm, 4), 'Bottom');
                                                         , ::is_variable(acForm, 4);
                                                         , {::extract_value(acForm, 4, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
                                                         );
-                                        , Variable():new('Right';
+                                        , Variable():new(IF(::is_variable(acForm, 5), ::extract_name(acForm, 5), 'Right');
                                                         , ::is_variable(acForm, 5);
                                                         , {::extract_value(acForm, 5, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                         );
-                                        , Variable():new('Box';
+                                        , Variable():new(IF(::is_variable(acForm, 6), ::extract_name(acForm, 6), 'Box');
                                                         , ::is_variable(acForm, 6);
                                                         , {::extract_value(acForm, 6, hJson)};
                                                         , {'C'};
                                                         , {{| oGet | is_box(AllTrim(oGet:buffer))}};
                                                         );
-                                        , Variable():new('Color';
+                                        , Variable():new(IF(::is_variable(acForm, 7), ::extract_name(acForm, 7), 'Color');
                                                         , ::is_variable(acForm, 7);
                                                         , {::extract_value(acForm, 7, hJson)};
                                                         , {'C'};
@@ -678,27 +678,27 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         );
                                         }
             CASE Creator():cType == OBJECT_SAY 
-                Creator():aoVariables := {Variable():new('Row';
+                Creator():aoVariables := {Variable():new(IF(::is_variable(acForm, 2), ::extract_name(acForm, 2), 'Row');
                                                         , ::is_variable(acForm, 2);
                                                         , {::extract_value(acForm, 2, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
                                                         );
-                                        , Variable():new('Column';
+                                        , Variable():new(IF(::is_variable(acForm, 3), ::extract_name(acForm, 3), 'Column');
                                                         , ::is_variable(acForm, 3);
                                                         , {::extract_value(acForm, 3, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                         );
                                         , ::create_say_get_form_expression(acForm, 4, hJson);
-                                        , Variable():new('Picture';
+                                        , Variable():new(IF(::is_variable(acForm, 5), ::extract_name(acForm, 5), 'Picture');
                                                         , ::is_variable(acForm, 5);
                                                         , {::extract_value(acForm, 5, hJson)};
                                                         , {'C'};
                                                         , {{| oGet | is_picture(RTrim(oGet:buffer))}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Color';
+                                        , Variable():new(IF(::is_variable(acForm, 6), ::extract_name(acForm, 6), 'Color');
                                                         , ::is_variable(acForm, 6);
                                                         , {::extract_value(acForm, 6, hJson)};
                                                         , {'C'};
@@ -708,27 +708,27 @@ METHOD make_form_array(xCode) CLASS Creator
                                         }
             CASE Creator():cType == OBJECT_GET
 
-                Creator():aoVariables := {Variable():new('Row';
+                Creator():aoVariables := {Variable():new(IF(::is_variable(acForm, 2), ::extract_name(acForm, 2), 'Row');
                                                         , ::is_variable(acForm, 2);
                                                         , {::extract_value(acForm, 2, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
                                                         );
-                                        , Variable():new('Column';
+                                        , Variable():new(IF(::is_variable(acForm, 3), ::extract_name(acForm, 3), 'Column');
                                                         , ::is_variable(acForm, 3);
                                                         , {::extract_value(acForm, 3, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                         );
                                         , ::create_say_get_form_expression(acForm, 4, hJson);
-                                        , Variable():new('Say picture';
+                                        , Variable():new(IF(::is_variable(acForm, 5), ::extract_name(acForm, 5), 'Say picture');
                                                         , ::is_variable(acForm, 5);
                                                         , {::extract_value(acForm, 5, hJson)};
                                                         , {'C'};
                                                         , {{| oGet | is_picture(RTrim(oGet:buffer))}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Say color';
+                                        , Variable():new(IF(::is_variable(acForm, 6), ::extract_name(acForm, 6), 'Say color');
                                                         , ::is_variable(acForm, 6);
                                                         , {::extract_value(acForm, 6, hJson)};
                                                         , {'C'};
@@ -736,40 +736,40 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         , .T.;
                                                         );
                                         , ::create_get_form_variable(acForm, 7, hJson);
-                                        , Variable():new('Get picture';
+                                        , Variable():new(IF(::is_variable(acForm, 8), ::extract_name(acForm, 8), 'Get picture');
                                                         , ::is_variable(acForm, 8);
                                                         , {::extract_value(acForm, 8, hJson)};
                                                         , {'C'};
                                                         , {{| oGet | is_picture(RTrim(oGet:buffer))}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Get color';
+                                        , Variable():new(IF(::is_variable(acForm, 9), ::extract_name(acForm, 9), 'Get color');
                                                         , ::is_variable(acForm, 9);
                                                         , {::extract_value(acForm, 9, hJson)};
                                                         , {'C'};
                                                         , {{| oGet | is_color(oGet:buffer, .T.)}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Caption';
+                                        , Variable():new(IF(::is_variable(acForm, 10), ::extract_name(acForm, 10), 'Caption');
                                                         , ::is_variable(acForm, 10);
                                                         , {::extract_value(acForm, 10, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('Message';
+                                        , Variable():new(IF(::is_variable(acForm, 11), ::extract_name(acForm, 11), 'Message');
                                                         , ::is_variable(acForm, 11);
                                                         , {::extract_value(acForm, 11, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('When';
+                                        , Variable():new(IF(::is_variable(acForm, 12), ::extract_name(acForm, 12), 'When');
                                                         , ::is_variable(acForm, 12);
                                                         , {::extract_value(acForm, 12, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Valid';
+                                        , Variable():new(IF(::is_variable(acForm, 13), ::extract_name(acForm, 13), 'Valid');
                                                         , ::is_variable(acForm, 13);
                                                         , {::extract_value(acForm, 13, hJson)};
                                                         , {'C'};
@@ -778,13 +778,13 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         );
                                         }
             CASE Creator():cType == OBJECT_CHECKBOX
-                Creator():aoVariables := {Variable():new('Row';
+                Creator():aoVariables := {Variable():new(IF(::is_variable(acForm, 2), ::extract_name(acForm, 2), 'Row');
                                                         , ::is_variable(acForm, 2);
                                                         , {::extract_value(acForm, 2, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
                                                         );
-                                        , Variable():new('Column';
+                                        , Variable():new(IF(::is_variable(acForm, 3), ::extract_name(acForm, 3), 'Column');
                                                         , ::is_variable(acForm, 3);
                                                         , {::extract_value(acForm, 3, hJson)};
                                                         , {'N'};
@@ -796,54 +796,54 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         , {'L'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('Caption';
+                                        , Variable():new(IF(::is_variable(acForm, 5), ::extract_name(acForm, 5), 'Caption');
                                                         , ::is_variable(acForm, 5);
                                                         , {::extract_value(acForm, 5, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('Message';
+                                        , Variable():new(IF(::is_variable(acForm, 6), ::extract_name(acForm, 6), 'Message');
                                                         , ::is_variable(acForm, 6);
                                                         , {::extract_value(acForm, 6, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('When';
+                                        , Variable():new(IF(::is_variable(acForm, 7), ::extract_name(acForm, 7), 'When');
                                                         , ::is_variable(acForm, 7);
                                                         , {::extract_value(acForm, 7, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Valid';
+                                        , Variable():new(IF(::is_variable(acForm, 8), ::extract_name(acForm, 8), 'Valid');
                                                         , ::is_variable(acForm, 8);
                                                         , {::extract_value(acForm, 8, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Color';
+                                        , Variable():new(IF(::is_variable(acForm, 9), ::extract_name(acForm, 9), 'Color');
                                                         , ::is_variable(acForm, 9);
                                                         , {::extract_value(acForm, 9, hJson)};
                                                         , {'C'};
                                                         , {{| oGet | is_color(oGet:buffer, .T.) .AND. !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 3)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 4))}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Focus';
+                                        , Variable():new(IF(::is_variable(acForm, 10), ::extract_name(acForm, 10), 'Focus');
                                                         , ::is_variable(acForm, 10);
                                                         , {::extract_value(acForm, 10, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('State';
+                                        , Variable():new(IF(::is_variable(acForm, 11), ::extract_name(acForm, 11), 'State');
                                                         , ::is_variable(acForm, 11);
                                                         , {::extract_value(acForm, 11, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Style';
+                                        , Variable():new(IF(::is_variable(acForm, 12), ::extract_name(acForm, 12), 'Style');
                                                         , ::is_variable(acForm, 12);
                                                         , {::extract_value(acForm, 12, hJson)};
                                                         , {'C'};
@@ -852,92 +852,92 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         );
                                         }
             CASE Creator():cType == OBJECT_LISTBOX
-                       Creator():aoVariables := {Variable():new('Top';
+                       Creator():aoVariables := {Variable():new(IF(::is_variable(acForm, 2), ::extract_name(acForm, 2), 'Top');
                                                         , ::is_variable(acForm, 2);
                                                         , {::extract_value(acForm, 2, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
                                                         );
-                                        , Variable():new('Left';
+                                        , Variable():new(IF(::is_variable(acForm, 3), ::extract_name(acForm, 3), 'Left');
                                                         , ::is_variable(acForm, 3);
                                                         , {::extract_value(acForm, 3, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                         );
-                                        , Variable():new('Bottom';
+                                        , Variable():new(IF(::is_variable(acForm, 4), ::extract_name(acForm, 4), 'Bottom');
                                                         , ::is_variable(acForm, 4);
                                                         , {::extract_value(acForm, 4, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
                                                         );
-                                        , Variable():new('Right';
+                                        , Variable():new(IF(::is_variable(acForm, 5), ::extract_name(acForm, 5), 'Right');
                                                         , ::is_variable(acForm, 5);
                                                         , {::extract_value(acForm, 5, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                         );
                                         , ::create_listbox_radiogroup_form_variable(acForm, 6, hJson);
-                                        , Variable():new('List';
+                                        , Variable():new(IF(::is_variable(acForm, 7), ::extract_name(acForm, 7), 'List');
                                                         , ::is_variable(acForm, 7);
                                                         , {hb_JsonDecode(IF(::is_variable(acForm, 7), hJson[::extract_name(acForm, 7)], RTrim(SubStr(acForm[7], 3))))['']};
                                                         , {'A'};
                                                         , {{| xValue | ::validate_listbox_list(xValue)}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Caption';
+                                        , Variable():new(IF(::is_variable(acForm, 8), ::extract_name(acForm, 8), 'Caption');
                                                         , ::is_variable(acForm, 8);
                                                         , {::extract_value(acForm, 8, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('Message';
+                                        , Variable():new(IF(::is_variable(acForm, 9), ::extract_name(acForm, 9), 'Message');
                                                         , ::is_variable(acForm, 9);
                                                         , {::extract_value(acForm, 9, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('When';
+                                        , Variable():new(IF(::is_variable(acForm, 10), ::extract_name(acForm, 10), 'When');
                                                         , ::is_variable(acForm, 10);
                                                         , {::extract_value(acForm, 10, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Valid';
+                                        , Variable():new(IF(::is_variable(acForm, 11), ::extract_name(acForm, 11), 'Valid');
                                                         , ::is_variable(acForm, 11);
                                                         , {::extract_value(acForm, 11, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Color';
+                                        , Variable():new(IF(::is_variable(acForm, 12), ::extract_name(acForm, 12), 'Color');
                                                         , ::is_variable(acForm, 12);
                                                         , {::extract_value(acForm, 12, hJson)};
                                                         , {'C'};
                                                         , {{| oGet | is_color(oGet:buffer, .T.) .AND. IF(Creator_listbox():dropdown(), !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 7)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 8)), !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 6)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 7)))}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Focus';
+                                        , Variable():new(IF(::is_variable(acForm, 13), ::extract_name(acForm, 13), 'Focus');
                                                         , ::is_variable(acForm, 13);
                                                         , {::extract_value(acForm, 13, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('State';
+                                        , Variable():new(IF(::is_variable(acForm, 14), ::extract_name(acForm, 14), 'State');
                                                         , ::is_variable(acForm, 14);
                                                         , {::extract_value(acForm, 14, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Dropdown';
+                                        , Variable():new(IF(::is_variable(acForm, 15), ::extract_name(acForm, 15), 'Dropdown');
                                                         , ::is_variable(acForm, 15);
                                                         , {::extract_value(acForm, 15, hJson)};
                                                         , {'L'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('Scrollbar';
+                                        , Variable():new(IF(::is_variable(acForm, 16), ::extract_name(acForm, 16), 'Scrollbar');
                                                         , ::is_variable(acForm, 16);
                                                         , {::extract_value(acForm, 16, hJson)};
                                                         , {'L'};
@@ -945,72 +945,72 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         );
                                         }
             CASE Creator():cType == OBJECT_RADIOGROUP
-                       Creator():aoVariables := {Variable():new('Top';
+                       Creator():aoVariables := {Variable():new(IF(::is_variable(acForm, 2), ::extract_name(acForm, 2), 'Top');
                                                         , ::is_variable(acForm, 2);
                                                         , {::extract_value(acForm, 2, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
                                                         );
-                                        , Variable():new('Left';
+                                        , Variable():new(IF(::is_variable(acForm, 3), ::extract_name(acForm, 3), 'Left');
                                                         , ::is_variable(acForm, 3);
                                                         , {::extract_value(acForm, 3, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0)  .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                         );
-                                        , Variable():new('Bottom';
+                                        , Variable():new(IF(::is_variable(acForm, 4), ::extract_name(acForm, 4), 'Bottom');
                                                         , ::is_variable(acForm, 4);
                                                         , {::extract_value(acForm, 4, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
                                                         );
-                                        , Variable():new('Right';
+                                        , Variable():new(IF(::is_variable(acForm, 5), ::extract_name(acForm, 5), 'Right');
                                                         , ::is_variable(acForm, 5);
                                                         , {::extract_value(acForm, 5, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_left(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_right(), MaxCol())}};
                                                         );
                                         , ::create_listbox_radiogroup_form_variable(acForm, 6, hJson);
-                                        , Variable():new('Group';
+                                        , Variable():new(IF(::is_variable(acForm, 7), ::extract_name(acForm, 7), 'Group');
                                                         , ::is_variable(acForm, 7);
                                                         , {hb_JsonDecode(IF(::is_variable(acForm, 7), hJson[::extract_name(acForm, 7)], RTrim(SubStr(acForm[7], 3))))['']};
                                                         , {'A'};
                                                         , {{| xValue | ::validate_radiogroup_group(xValue)}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Caption';
+                                        , Variable():new(IF(::is_variable(acForm, 8), ::extract_name(acForm, 8), 'Caption');
                                                         , ::is_variable(acForm, 8);
                                                         , {::extract_value(acForm, 8, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('Message';
+                                        , Variable():new(IF(::is_variable(acForm, 9), ::extract_name(acForm, 9), 'Message');
                                                         , ::is_variable(acForm, 9);
                                                         , {::extract_value(acForm, 9, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('Color';
+                                        , Variable():new(IF(::is_variable(acForm, 10), ::extract_name(acForm, 10), 'Color');
                                                         , ::is_variable(acForm, 10);
                                                         , {::extract_value(acForm, 10, hJson)};
                                                         , {'C'};
                                                         , {{| oGet | is_color(oGet:buffer, .T.) .AND. !Empty(hb_ColorIndex(AllTrim(oGet:buffer), 2)) .AND. Empty(hb_ColorIndex(AllTrim(oGet:buffer), 3))}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Focus';
+                                        , Variable():new(IF(::is_variable(acForm, 11), ::extract_name(acForm, 11), 'Focus');
                                                         , ::is_variable(acForm, 11);
                                                         , {::extract_value(acForm, 11, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('When';
+                                        , Variable():new(IF(::is_variable(acForm, 12), ::extract_name(acForm, 12), 'When');
                                                         , ::is_variable(acForm, 12);
                                                         , {::extract_value(acForm, 12, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Valid';
+                                        , Variable():new(IF(::is_variable(acForm, 13), ::extract_name(acForm, 13), 'Valid');
                                                         , ::is_variable(acForm, 13);
                                                         , {::extract_value(acForm, 13, hJson)};
                                                         , {'C'};
@@ -1019,13 +1019,13 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         );
                                         }
             CASE Creator():cType == OBJECT_PUSHBUTTON
-                Creator():aoVariables := {Variable():new('Row';
+                Creator():aoVariables := {Variable():new(IF(::is_variable(acForm, 2), ::extract_name(acForm, 2), 'Row');
                                                         , ::is_variable(acForm, 2);
                                                         , {::extract_value(acForm, 2, hJson)};
                                                         , {'N'};
                                                         , {{| oGet | Val(oGet:buffer) >= IF(WSelect() == 0, Window():get_top(), 0) .AND. Val(oGet:buffer) <= IF(WSelect() == 0, Window():get_bottom(), MaxRow())}};
                                                         );
-                                        , Variable():new('Column';
+                                        , Variable():new(IF(::is_variable(acForm, 3), ::extract_name(acForm, 3), 'Column');
                                                         , ::is_variable(acForm, 3);
                                                         , {::extract_value(acForm, 3, hJson)};
                                                         , {'N'};
@@ -1037,54 +1037,54 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         , {'L'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('Caption';
+                                        , Variable():new(IF(::is_variable(acForm, 5), ::extract_name(acForm, 5), 'Caption');
                                                         , ::is_variable(acForm, 5);
                                                         , {::extract_value(acForm, 5, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('Message';
+                                        , Variable():new(IF(::is_variable(acForm, 6), ::extract_name(acForm, 6), 'Message');
                                                         , ::is_variable(acForm, 6);
                                                         , {::extract_value(acForm, 6, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         );
-                                        , Variable():new('When';
+                                        , Variable():new(IF(::is_variable(acForm, 7), ::extract_name(acForm, 7), 'When');
                                                         , ::is_variable(acForm, 7);
                                                         , {::extract_value(acForm, 7, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Valid';
+                                        , Variable():new(IF(::is_variable(acForm, 8), ::extract_name(acForm, 8), 'Valid');
                                                         , ::is_variable(acForm, 8);
                                                         , {::extract_value(acForm, 8, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Color';
+                                        , Variable():new(IF(::is_variable(acForm, 9), ::extract_name(acForm, 9), 'Color');
                                                         , ::is_variable(acForm, 9);
                                                         , {::extract_value(acForm, 9, hJson)};
                                                         , {'C'};
                                                         , {{| oGet | is_color(oGet:buffer, .T.)}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Focus';
+                                        , Variable():new(IF(::is_variable(acForm, 10), ::extract_name(acForm, 10), 'Focus');
                                                         , ::is_variable(acForm, 10);
                                                         , {::extract_value(acForm, 10, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('State';
+                                        , Variable():new(IF(::is_variable(acForm, 11), ::extract_name(acForm, 11), 'State');
                                                         , ::is_variable(acForm, 11);
                                                         , {::extract_value(acForm, 11, hJson)};
                                                         , {'C'};
                                                         , {{|| .T.}};
                                                         , .T.;
                                                         );
-                                        , Variable():new('Style';
+                                        , Variable():new(IF(::is_variable(acForm, 12), ::extract_name(acForm, 12), 'Style');
                                                         , ::is_variable(acForm, 12);
                                                         , {::extract_value(acForm, 12, hJson)};
                                                         , {'C'};
@@ -1102,23 +1102,25 @@ RETURN NIL
 METHOD create_say_get_form_expression(acForm, nIndex, hJson) CLASS Creator
 
     LOCAL cType := ::extract_type(acForm, nIndex)
+    LOCAL lIsVariable := ::is_variable(acForm, nIndex)
+    LOCAL cName := IF(lIsVariable, ::extract_name(acForm, nIndex), 'Expression')
     LOCAL oResult
 
     DO CASE
         CASE cType == 'C'
-            oResult := Variable():new('Expression', ::is_variable(acForm, nIndex), {::extract_value(acForm, nIndex, hJson), 3.14, Date(), .T.};
+            oResult := Variable():new(cName, ::is_variable(acForm, nIndex), {::extract_value(acForm, nIndex, hJson), 3.14, Date(), .T.};
                                       , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
                                      )
         CASE cType == 'N'
-            oResult := Variable():new('Expression', ::is_variable(acForm, nIndex), {'Expression', ::extract_value(acForm, nIndex, hJson), Date(), .T.};
+            oResult := Variable():new(cName, ::is_variable(acForm, nIndex), {'Expression', ::extract_value(acForm, nIndex, hJson), Date(), .T.};
                                       , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
                                      )
         CASE cType == 'D'
-            oResult := Variable():new('Expression', ::is_variable(acForm, nIndex), {'Expression',  3.14, ::extract_value(acForm, nIndex, hJson), .T.};
+            oResult := Variable():new(cName, ::is_variable(acForm, nIndex), {'Expression',  3.14, ::extract_value(acForm, nIndex, hJson), .T.};
                                       , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
                                      )
         CASE cType == 'L'
-            oResult := Variable():new('Expression', ::is_variable(acForm, nIndex), {'Expression',  3.14, Date(), ::extract_value(acForm, nIndex, hJson)};
+            oResult := Variable():new(cName, ::is_variable(acForm, nIndex), {'Expression',  3.14, Date(), ::extract_value(acForm, nIndex, hJson)};
                                       , {'C', 'N', 'D', 'L'}, {{|| .T.}, {|| .T.}, {|| .T.}, {|| .T.}};
                                      )
     ENDCASE
@@ -1155,7 +1157,7 @@ RETURN oResult
 METHOD create_listbox_radiogroup_form_variable(acForm, nIndex, hJson) CLASS Creator
 
     LOCAL cType := ::extract_type(acForm, nIndex)
-    LOCAL cName := ::extract_name(acForm, nIndex, hJson)
+    LOCAL cName := ::extract_name(acForm, nIndex)
     LOCAL oResult
 
     DO CASE
@@ -1170,15 +1172,17 @@ RETURN oResult
 METHOD create_window_form_shadow(acForm, nIndex, hJson) CLASS Creator
 
     LOCAL cType := ::extract_type(acForm, nIndex)
+    LOCAL lIsVariable := ::is_variable(acForm, nIndex)
+    LOCAL cName := IF(lIsVariable, ::extract_name(acForm, nIndex), 'Shadow')
     LOCAL oResult
 
     DO CASE
         CASE cType == 'C'
-            oResult := Variable():new('Shadow', ::is_variable(acForm, nIndex), {::extract_value(acForm, nIndex, hJson), -1};
+            oResult := Variable():new(cName, lIsVariable, {::extract_value(acForm, nIndex, hJson), -1};
                                       , {'C', 'N'}, {{|| .T.}, {|| .T.}}, , 1;
                                      )
         CASE cType == 'N'
-            oResult := Variable():new('Shadow', ::is_variable(acForm, nIndex), {Config():get_config('DefaultWindowCreatorShadow'), ::extract_value(acForm, nIndex, hJson)};
+            oResult := Variable():new(cName, lIsVariable, {Config():get_config('DefaultWindowCreatorShadow'), ::extract_value(acForm, nIndex, hJson)};
                                       , {'C', 'N'}, {{|| .T.}, {|| .T.}};
                                      )
     ENDCASE
@@ -1432,8 +1436,7 @@ METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
     LOCAL i
 
     WSelect(0)
-    Window():refresh_header()
-    Window():refresh_footer()
+    Window():refresh_header_footer()
     RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
     WSelect(nOldWindow)
     WMove(WRow(), WCol())
@@ -1555,8 +1558,7 @@ METHOD form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
 
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
-    Window():refresh_header()
-    Window():refresh_footer()
+    Window():refresh_header_footer()
     WMove(WRow(), WCol())
 
 RETURN NIL

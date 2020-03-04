@@ -13,7 +13,7 @@ FUNCTION create_initial_config_hash()
                             , 'CreateNewFormFooter', "Enter the form's unique language and ID";
                             , 'ChangeIDFooter', "Enter the form's unique language and/or ID";
                             , 'CloneFooter', "Enter the form's unique language and/or ID";
-                            , 'ReorderFooter', 'ESC - quit  DEL - delete  F2 - rebuild  F3 - change  F4 - edit  F5 - move  F6/F7 - preeview line/form  F8/F9 - move down/up  F10 - add window';
+                            , 'ReorderFooter', 'ESC - quit  DEL - delete  F2 - rebuild  F3 - change  F4 - edit  F5 - move  F6/F7 - preview line/form  F8/F9 - move down/up  F10 - add window';
                             , 'CreatorWindowFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorBoxFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+A - change the corner  ALT+ENTER - READ  ESC - quit"; 
                             , 'CreatorSayFooter', "Arrows - move the window's corner  Enter - fast edit  ALT+ENTER - READ  ESC - quit"; 
@@ -25,6 +25,9 @@ FUNCTION create_initial_config_hash()
                             , 'MenuDefaultFooter', 'Select the item';
                             , 'SaveFooter', 'SPACE - change the save method  ENTER - change the variable name';
                             , 'MemoEditFooter', 'ESC - quit without save  CTRL+W - save  INS - insert/overwrite mode';
+                            , 'ChangeValueColorBox', 'ESC - quit without save  CTRL+W - save  INS - insert/overwrite mode  F2 - colors  F3 - boxes';
+                            , 'SelectColorFooter', 'ESC - quit  ENTER - select  CTRL+UP/PGUP - go up  CTRL+DOWN/PGDN - go down  CTRL+LEFT - go left  CTRL+RIGHT - go right  ARROWS - move one element';
+                            , 'SelectBoxFooter', 'ESC - quit  ENTER - select  CTRL+UP/PGUP - go up  CTRL+DOWN/PGDN - go down  CTRL+LEFT - go left  CTRL+RIGHT - go right  ARROWS - move one element';
                             ;/*** HEADERS ***/
                             , 'ProgramFirstHeader', 'Welcome back! Select the action you are interested in';
                             , 'DisplayFormHeader', 'Form preview';
@@ -44,6 +47,8 @@ FUNCTION create_initial_config_hash()
                             , 'FormFastEditHeader', 'Fast edit mode';
                             , 'SaveHeader', 'Save the form';
                             , 'MemoEditHeader', 'Edit the text';
+                            , 'SelectColorHeader', 'Select color';
+                            , 'SelectBoxHeader', 'Select box';
                             ;/*** TITLES ***/
                             , 'MainRowBrowseTitle', ' Forms ';
                             , 'ReorderRowBrowseTitle', ' Reorder ';

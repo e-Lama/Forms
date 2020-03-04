@@ -1,4 +1,5 @@
 #include "hbclass.ch"
+#include "inkey.ch"
 #include "box.ch"
 
 #include "functions.ch"
@@ -105,7 +106,6 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
     LOCAL nOldWindow := WSelect()
     LOCAL nOldCursor := Set(_SET_CURSOR)
     LOCAL cOldHeader := Window():header(Config():get_config('MemoEditHeader'))
-    LOCAL cOldFooter := Window():footer(Config():get_config('MemoEditFooter'))
     LOCAL nTop := Window():get_top() + 1
     LOCAL nLeft := Window():get_left() + 1
     LOCAL nBottom := Window():get_bottom() - 1
@@ -115,17 +115,17 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
     LOCAL cType := ValType(xValue)
     LOCAL hVariables := hb_Hash()
     LOCAL cOldScreen
+    LOCAL cOldFooter 
 
+    cOldFooter := Window():footer(Config():get_config(IF(cType == 'C', 'ChangeValueColorBox', 'MemoEditFooter')))
+
+    WSelect(0)
     SAVE SCREEN TO cOldScreen
+    Window():refresh_header_footer()
 
     IF YesNo(Config():get_config('ChangeVariableValue'))
 
         IF cType == 'A'
-
-            WSelect(0)
-            Window():refresh_header()
-            Window():refresh_footer()
-
             DO WHILE lContinue
 
                 @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
@@ -142,11 +142,12 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
                 ENDIF
             ENDDO
 
-            WSelect(nOldWindow)
-
         ELSE
             IF cType == 'C'
                 xValue := xValue + Space(VARIABLE_CHARACTER_LENGTH - Len(xValue))
+
+                SET KEY K_F2 TO select_color()
+                SET KEY K_F3 TO select_box()
             ENDIF
 
             hVariables['variable'] := xValue
@@ -204,8 +205,8 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen
-    Window():refresh_header()
-    Window():refresh_footer()
+    Window():refresh_header_footer()
+    WSelect(nOldWindow)
 
 RETURN xValue
 

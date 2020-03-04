@@ -121,8 +121,7 @@ STATIC PROCEDURE display_form()
         Inform(Config():get_config('CorruptionDetected'))
     ELSEIF validate()
         
-        Window():refresh_header()
-        Window():refresh_footer()
+        Window():refresh_header_footer()
 
         IF prepare_form()
             IF Len(GETLIST) > 0 .AND. NoYes(Config():get_config('DoReadOrder'))
@@ -169,8 +168,7 @@ STATIC PROCEDURE create_new_form()
 
     IF YesNo(Config():get_config('CreateForm'))
 
-        Window():refresh_header()
-        Window():refresh_footer()
+        Window():refresh_header_footer()
 
         IF Parser():prepare_form_from_database(Config():get_config('Language'), 'CREATE_FORM', hVariables)
             READ
@@ -260,8 +258,7 @@ STATIC PROCEDURE add_to_form()
         RETURN
     ENDIF
 
-    Window():refresh_header()
-    Window():refresh_footer()
+    Window():refresh_header_footer()
     SAVE SCREEN TO cOldScreen
 
     DO WHILE nChoose != 0
@@ -298,8 +295,7 @@ STATIC PROCEDURE add_to_form()
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen
-    Window():refresh_header()
-    Window():refresh_footer()
+    Window():refresh_header_footer()
     RESTORE KEYS FROM axOldKeys
     GETLIST := aoOldGetList
 
@@ -328,8 +324,7 @@ STATIC PROCEDURE fast_edit()
         Inform(Config():get_config('CantLock'))
     ELSE
 
-        Window():refresh_header()
-        Window():refresh_footer()
+        Window():refresh_header_footer()
 
         @ nTop, nLeft, nBottom, nRight BOX B_SINGLE
         @ nTop, Int((nRight + nLeft - Len(Config():get_config('Code'))) / 2) SAY Config():get_config('Code')
@@ -345,8 +340,7 @@ STATIC PROCEDURE fast_edit()
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen
-    Window():refresh_header()
-    Window():refresh_footer()
+    Window():refresh_header_footer()
     SET CURSOR (cast(nOldCursor, 'L'))
     RESTORE KEYS FROM axOldKeys
 
@@ -429,8 +423,7 @@ STATIC PROCEDURE change_id()
         Inform(Config():get_config('CantLock'))
     ELSEIF NoYes(Config():get_config('YesNoFormIdLanguageChange'))
 
-        Window():refresh_header()
-        Window():refresh_footer()
+        Window():refresh_header_footer()
 
         DO WHILE !lSuccess
             IF Parser():prepare_form_from_database(Config():get_config('Language'), 'CREATE_FORM', hVariables)
@@ -508,8 +501,7 @@ STATIC PROCEDURE clone()
 
     SAVE SCREEN TO cOldScreen
 
-    Window():refresh_header()
-    Window():refresh_footer()
+    Window():refresh_header_footer()
 
     DO WHILE !lSuccess
         IF Parser():prepare_form_from_database(Config():get_config('Language'), 'CREATE_FORM', hVariables)

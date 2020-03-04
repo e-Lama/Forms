@@ -511,8 +511,7 @@ PROCEDURE change_order()
         SET KEY K_F9 TO move_row_up()
         SET KEY K_F10 TO add_window()
 
-        Window():refresh_header()
-        Window():refresh_footer()
+        Window():refresh_header_footer()
 
         INDEX ON field->line_nr TO mem:dbReorderInd
         GO TOP

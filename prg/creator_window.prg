@@ -30,8 +30,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_window
         CLEAR GETS
     ENDIF
 
-    Window():refresh_header()
-    Window():refresh_footer()
+    Window():refresh_header_footer()
 
     SAVE SCREEN TO cScreen
 
@@ -137,7 +136,6 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_window
 
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
-    Window():refresh_header()
-    Window():refresh_footer()
+    Window():refresh_header_footer()
 
 RETURN lSave

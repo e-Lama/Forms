@@ -45,13 +45,11 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
         cScreen := SaveScreen(nTop, nLeft, nBottom, nRight)
         WSelect(nOldWindow)
 
-        Window():refresh_header()
-        Window():refresh_footer()
+        Window():refresh_header_footer()
 
         WClose()
     ELSE
-        Window():refresh_header()
-        Window():refresh_footer()
+        Window():refresh_header_footer()
 
         CLEAR GETS
 
@@ -200,8 +198,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
 
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
-    Window():refresh_header()
-    Window():refresh_footer()
+    Window():refresh_header_footer()
 
 RETURN lSave
 
