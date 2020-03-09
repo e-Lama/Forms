@@ -7,6 +7,8 @@
 #include "rowbrowse.ch"
 #include "parser.ch"
 
+#define INITIALIZATION_FAILED 'Configuration initialization failed!'
+
 REQUEST HB_CODEPAGE_UTF8EX
 
 PROCEDURE main()
@@ -35,6 +37,7 @@ PROCEDURE main()
             SET KEY K_F5 TO fast_edit()
             SET KEY K_F6 TO clone()
             SET KEY K_F7 TO change_id()
+            SET KEY K_F8 TO settings()
             SET KEY K_DEL TO ask_delete_form()
             SET KEY K_ESC TO quit_program()
 
@@ -51,7 +54,7 @@ PROCEDURE main()
 
             oRowBrowse:display()
         ELSE
-            Config():get_config('InitConfigFailure')
+            Inform(INITIALIZATION_FAILED)
         ENDIF
     RECOVER USING oError
         standard_error_handler(oError)

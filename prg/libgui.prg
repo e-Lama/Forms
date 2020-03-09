@@ -7,7 +7,7 @@ FUNCTION create_initial_config_hash()
 
     LOCAL hConfig := hb_Hash(;
                             ;/*** FOOTERS ***/
-                            'ProgramFirstFooter', 'ESC - quit  DEL - delete  F1 - reorder  F2 - create  F3 - add  F4 - preview  F5 - fast edit  F6 - clone  F7 - change ID';
+                            'ProgramFirstFooter', 'ESC - quit  DEL - delete  F1 - reorder  F2 - create  F3 - add  F4 - preview  F5 - fast edit  F6 - clone  F7 - change ID  F8 - settings';
                             , 'DisplayFormFooter', 'Press any key to quit the preview';
                             , 'ReorderDisplayForm', 'ALT+ENTER - READ  another key - quit';
                             , 'CreateNewFormFooter', "Enter the form's unique language and ID";
@@ -28,6 +28,7 @@ FUNCTION create_initial_config_hash()
                             , 'ChangeValueColorBox', 'ESC - quit without save  CTRL+W - save  INS - insert/overwrite mode  F2 - colors  F3 - boxes';
                             , 'SelectColorFooter', 'ESC - quit  ENTER - select  CTRL+UP/PGUP - go up  CTRL+DOWN/PGDN - go down  CTRL+LEFT - go left  CTRL+RIGHT - go right  ARROWS - move one element';
                             , 'SelectBoxFooter', 'ESC - quit  ENTER - select  CTRL+UP/PGUP - go up  CTRL+DOWN/PGDN - go down  CTRL+LEFT - go left  CTRL+RIGHT - go right  ARROWS - move one element';
+                            , 'SettingsFooter', 'ESC - quit  CTRL+W - save  INS - insert/overwrite mode  F2 - colors  F3 - boxes';
                             ;/*** HEADERS ***/
                             , 'ProgramFirstHeader', 'Welcome back! Select the action you are interested in';
                             , 'DisplayFormHeader', 'Form preview';
@@ -49,6 +50,7 @@ FUNCTION create_initial_config_hash()
                             , 'MemoEditHeader', 'Edit the text';
                             , 'SelectColorHeader', 'Select color';
                             , 'SelectBoxHeader', 'Select box';
+                            , 'SettingsHeader', 'Settings';
                             ;/*** TITLES ***/
                             , 'MainRowBrowseTitle', ' Forms ';
                             , 'ReorderRowBrowseTitle', ' Reorder ';
@@ -57,7 +59,6 @@ FUNCTION create_initial_config_hash()
                             , 'NoVariableFileDialog', "There isn't the variable file. Create it?";
                             , 'NoVariableFileInform', "There isn't the variable file. The program is going to be closed";
                             , 'InitFilesFailure', 'Files initialization failed!';
-                            , 'InitConfigFailure', 'Configuration initialization failed!';
                             , 'QuitQuestion', 'Are you sure to quit?';
                             , 'DoReadOrder', 'Execute the READ order?';
                             , 'CreateForm', 'Create a new form?';
@@ -67,10 +68,13 @@ FUNCTION create_initial_config_hash()
                             , 'YesNoDeleteRow', 'Are you sure to delete the row?';
                             , 'YesNoFormIdLanguageChange', 'Are you sure to change the language or the ID of the form?';
                             , 'YesNoBreakEdition', 'Are you sure to break the edition?';
+                            , 'YesNoRestoreSettings', 'Are you sure? This operation is irreversible';
                             , 'DialogWhatShouldIDo', 'What should I do?';
                             , 'Continue', 'Continue';
                             , 'Save', 'Save';
                             , 'Quit', 'Quit';
+                            , 'RestoreSettings', 'Restore default settings';
+                            , 'ChangeSettings', 'Change settings';
                             , 'YesNoBreakEditionLostChanges', 'Are you sure to break the edition without save?';
                             , 'BrokenFormWhatShouldIDo', 'Warning! The form is broken!;What should I do?';
                             , 'DialogRemoveSpaces', 'Should I remove spaces?';
@@ -93,8 +97,9 @@ FUNCTION create_initial_config_hash()
                             , 'CriticalError', 'Critical error! Program is going to be closed!';
                             , 'ImportantForm', "The selected form is crucial for the program. It's modification or deletion may cause irreparable damage. Backup is recommended. Continue anyway?";
                             , 'OnlyOneWindowAllowed', 'Only one window per form is allowed';
+                            , 'NecessaryRestart', 'The program will be restarted to apply a new setting';
                             ;/*** INNER LIB ***/
-                            , 'Title', 'Forms v0.1 eLama';
+                            , 'Title', 'Forms v0.2 eLama';
                             , 'CantCreateConfigFile', 'Creating of the configuration file has failed';
                             , 'CorruptionDetected', 'Data is broken!';
                             , 'VariableRepeating', 'Variable is in use multiple times';
@@ -124,7 +129,6 @@ FUNCTION create_initial_config_hash()
                             , 'DefaultRadiogroupCreatorColor', 'GR/B,RB/B,BG/R,,B/R';
                             , 'DefaultPushbuttonCreatorColor', 'GR/B,RB/G,BG/R,B/R,N/W';
                             , 'SaveColor', 'W/N,N/W,W*/N,N*/W';
-                            , 'VariablesDefinitions', 'dbVariables.dbf';
                             , 'dbfPath', 'dbf/';
                             , 'ntxPath', 'ntx/';
                             , 'SaveAsConstant', 'constant';

@@ -1,6 +1,9 @@
 #include "inkey.ch"
 #include "box.ch"
 
+#define ROWS 6
+#define COLS 7
+
 PROCEDURE select_box()
 
     LOCAL cOldHeader := Window():header(Config():get_config('SelectBoxHeader'))
@@ -33,10 +36,14 @@ RETURN
 
 STATIC FUNCTION get_box()
 
-    LOCAL acBoxes := {'┌', '─', '┐', '│', '┘', '─', '└', '│', '╔', '═', '╗', '║', '╝', '═', '╚', '║', '╓', '╖', '╜', '╙', '╒', '╕', '╛', '╘'}
+    LOCAL acBoxes := {'┌', '─', '┐', '│', '┘', '─', '└', '│', '╔', '═', '╗', '║', '╝', '═', '╚', '║', '╓', '╖', '╜', '╙', '╒', '╕', '╛', '╘', '░', '▒', '▓', '┤', '╣', '┴', '┬', '├', '┼', '╩', '╦', '╠', '╬', '█', '▄', '¦', '▀', '■'} //42 elements
     LOCAL nLength := Len(acBoxes)
-    LOCAL nRow := 2 * (Window():get_top() + 1)
-    LOCAL nCol := 2 
+    LOCAL nMinRow := Window():center_row() - Int(nLength / ROWS)
+    LOCAL nMinCol := Window():center_col() - Int(nLength / COLS)
+    LOCAL nRow := nMinRow + 1
+    LOCAL nCol := nMinCol + 2
+    LOCAL nMaxRow := nMinRow + 2 * ROWS - 1
+    LOCAL nMaxCol := nMinCol + 2 * COLS 
     LOCAL nIndexRow := 1
     LOCAL nIndexCol := 1
     LOCAL lSave := .F.
@@ -46,11 +53,12 @@ STATIC FUNCTION get_box()
 
     SAVE SCREEN TO cOldScreen
 
-    draw_boxes(acBoxes, nRow)
+    draw_boxes(acBoxes, nMinRow, nMinCol)
 
     SAVE SCREEN TO cScreen
 
-    ++nRow
+    nMinRow += 1
+    nMinCol += 2
     display_box(nRow, nCol)
 
     DO WHILE .T.
@@ -63,49 +71,49 @@ STATIC FUNCTION get_box()
             CASE nKey == K_ESC
                 EXIT
             CASE nKey == K_DOWN
-                IF nRow < 2 * (Window():get_top() + 1) - 1 + Int(nLength / 6) * 2
+                IF nRow < nMaxRow
                     nRow += 2
                     ++nIndexRow
                 ELSE
-                    nRow := 2 * (Window():get_top() + 1) + 1
+                    nRow := nMinRow
                     nIndexRow := 1
                 ENDIF
             CASE nKey == K_UP
-                IF nRow > 2 * (Window():get_top + 1) + 1
+                IF nRow > nMinRow
                     nRow -= 2
                     --nIndexRow
                 ELSE
-                    nRow := 2 * (Window():get_top() + 1) - 1 + Int(nLength / 6) * 2
-                    nIndexRow := Int(nLength / 6)
+                    nRow := nMaxRow
+                    nIndexRow := ROWS
                 ENDIF
             CASE nKey == K_LEFT
-                IF nCol > 2
+                IF nCol > nMinCol
                     nCol -= 2
                     --nIndexCol
                 ELSE
-                    nCol := Int(nLength / 4) * 2
-                    nIndexCol := Int(nLength / 4)
+                    nCol := nMaxCol
+                    nIndexCol := COLS
                 ENDIF
             CASE nKey == K_RIGHT
-                IF nCol < (nLength / 4) * 2
+                IF nCol < nMaxCol
                     nCol += 2
                     ++nIndexCol
                 ELSE
-                    nCol := 2
+                    nCol := nMinCol
                     nIndexCol := 1
                 ENDIF
             CASE nKey == K_CTRL_DOWN .OR. nKey == K_PGDN
-                nIndexRow := Int(nLength / 6)
-                nRow := 2 * (Window():get_top() + 1) - 1 + (nLength / 6) * 2
+                nIndexRow := ROWS
+                nRow := nMaxRow
             CASE nKey == K_CTRL_UP .OR. nKey == K_PGUP
                 nIndexRow := 1
-                nRow := 2 * (Window():get_top() + 1) + 1
+                nRow := nMinRow
             CASE nKey == K_CTRL_LEFT
                 nIndexCol := 1
-                nCol := 2
+                nCol := nMinCol
             CASE nKey == K_CTRL_RIGHT 
-                nIndexCol := Int(nLength / 4)
-                nCol := (nLength / 4) * 2
+                nIndexCol := COLS
+                nCol := nMaxCol
             CASE nKey == K_ENTER
                 lSave := .T.
                 EXIT
@@ -116,16 +124,16 @@ STATIC FUNCTION get_box()
 
     RESTORE SCREEN FROM cOldScreen
 
-RETURN IF(lSave, acBoxes[6 * (nIndexRow - 1) + nIndexCol], '')
+RETURN IF(lSave, acBoxes[COLS * (nIndexRow - 1) + nIndexCol], '')
 
-STATIC PROCEDURE draw_boxes(acBoxes, nRow)
+STATIC PROCEDURE draw_boxes(acBoxes, nRow, nCol)
 
     LOCAL i, j
 
     DispBegin()
-    FOR i := 1 TO 4
-        FOR j := 1 TO 6
-            @ 2 * i + nRow, 2 * j SAY acBoxes[6 * (i - 1) + j]
+    FOR i := 1 TO ROWS
+        FOR j := 1 TO COLS
+            @ 2 * i + nRow, 2 * j + nCol SAY acBoxes[COLS * (i - 1) + j]
         NEXT
     NEXT
     DispEnd()

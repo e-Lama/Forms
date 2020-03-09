@@ -5,11 +5,13 @@
 #include "functions.ch"
 #include "variables.ch"
 
+#define VARIABLES_PATH 'dbVariables.dbf'
+
 CREATE CLASS Variable 
 
 EXPORTED:
 
-    METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTrim, nIndex) CONSTRUCTOR
+    METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTrim, nType, nIndex) CONSTRUCTOR
     METHOD get_value() INLINE ::axValues[::nIndex]
     METHOD get_type() INLINE ValType(::axValues[::nIndex])
     METHOD get_name() INLINE ::cName
@@ -36,6 +38,7 @@ HIDDEN:
     VAR acPossibleTypes AS ARRAY INIT Array(0)
     VAR abValidates AS ARRAY INIT Array(0)
     VAR lAlwaysTrim AS LOGICAL INIT .F.
+    VAR nType AS NUMERIC INIT NONE
 
     VAR nIndex AS NUMERIC INIT 1
 
@@ -50,7 +53,7 @@ HIDDEN:
 
 ENDCLASS LOCKED
 
-METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTrim, nIndex) CLASS Variable
+METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTrim, nType, nIndex) CLASS Variable
 
     ::cName := cName
     ::axValues := axValues
@@ -64,6 +67,10 @@ METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTr
 
     IF ValType(nIndex) == 'N'
         ::nIndex := nIndex
+    ENDIF
+
+    IF ValType(nType) == 'N'
+        ::nType := nType
     ENDIF
 
 RETURN Self
@@ -148,6 +155,10 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
 
                 SET KEY K_F2 TO select_color()
                 SET KEY K_F3 TO select_box()
+
+                IF ::nType == IS_BOX
+                   xValue := hb_Translate(xValue, 'EN', hb_cdpSelect())
+                ENDIF
             ENDIF
 
             hVariables['variable'] := xValue
@@ -173,6 +184,7 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
                 READ
                 hVariables := Parser():get_answers()
                 WClose()
+                WSelect(0)
 
                 IF cType == 'N'
                     xValue := Val(hVariables['variable'])
@@ -200,6 +212,10 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
             ENDIF
         ENDIF
 
+        IF ::nType == IS_BOX
+            xValue := hb_Translate(xValue, hb_cdpSelect(), 'EN')
+        ENDIF
+
     ENDIF
 
     Window():header(cOldHeader)
@@ -219,12 +235,16 @@ METHOD get_type_array()
         SWITCH cType
             CASE 'N'
                 AAdd(acArray, 'NUMERIC')
+                EXIT
             CASE 'D'
                 AAdd(acArray, 'DATE')
+                EXIT
             CASE 'C'
                 AAdd(acArray, 'CHARACTER')
+                EXIT
             CASE 'L'
                 AAdd(acArray, 'LOGICAL')
+                EXIT
         ENDSWITCH
     NEXT
 
@@ -299,8 +319,8 @@ METHOD handle_variables() CLASS Variable
     LOCAL cNoDataBaseFileInform := Config():get_config('NoVariableFileInform')
     LOCAL lSuccess
 
-    IF File(Config():get_config('dbfPath') + Config():get_config('VariablesDefinitions'))
-        USE (Config():get_config('dbfPath') + Config():get_config('VariablesDefinitions')) VIA 'DBFNTX' ALIAS dbVariables NEW EXCLUSIVE 
+    IF File(Config():get_config('dbfPath') + VARIABLES_PATH)
+        USE (Config():get_config('dbfPath') + VARIABLES_PATH) VIA 'DBFNTX' ALIAS dbVariables NEW EXCLUSIVE 
         lSuccess := (Alias() == 'DBVARIABLES')
     ELSE
         IF YesNo(cNoDataBaseFileDialog)
@@ -328,6 +348,6 @@ METHOD create_variables_file() CLASS Variable
                       , {'JSON', 'M', 10, 0};
                       }
 
-    dbCreate(Config():get_config('dbfPath') + Config():get_config('VariablesDefinitions'), axStruct, 'DBFNTX', .T., 'dbVariables')
+    dbCreate(Config():get_config('dbfPath') + VARIABLES_PATH, axStruct, 'DBFNTX', .T., 'dbVariables')
 
 RETURN Alias() == 'DBVARIABLES'

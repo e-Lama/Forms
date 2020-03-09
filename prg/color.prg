@@ -37,8 +37,12 @@ STATIC FUNCTION get_color()
     LOCAL nLength := Len(acColors)
     LOCAL lPlus := .F.
     LOCAL nWidth := 5
-    LOCAL nRow := 2 * (Window():get_top() + 1)
-    LOCAL nCol := 2 * nWidth
+    LOCAL nMinRow := Window():center_row() - Int((2 * nLength + 1) / 2) * 2 + 1
+    LOCAL nMinCol := Window():center_col() - (nLength + 1) * nWidth 
+    LOCAL nRow := nMinRow + 1
+    LOCAL nCol := nMinCol + 2 * nWidth
+    LOCAL nMaxRow := nMinRow + 4 * Len(acColors) - 1
+    LOCAL nMaxCol := nMinCol + 2 * nLength * nWidth 
     LOCAL nIndexRow := 1
     LOCAL nIndexCol := 1
     LOCAL lSave := .F.
@@ -48,11 +52,12 @@ STATIC FUNCTION get_color()
 
     SAVE SCREEN TO cOldScreen
 
-    draw_colors(acColors, nRow, nWidth)
+    draw_colors(acColors, nMinRow, nMinCol, nWidth)
 
     SAVE SCREEN TO cScreen
 
-    nRow += 5
+    nMinRow += 1
+    nMinCol += nWidth * 2
     display_box(nRow, nCol, nWidth)
 
     DO WHILE .T.
@@ -65,49 +70,49 @@ STATIC FUNCTION get_color()
             CASE nKey == K_ESC
                 EXIT
             CASE nKey == K_DOWN
-                IF nRow <= 2 * (Window():get_top() + 1) + 1 + nLength * 4
+                IF nRow < nMaxRow
                     nRow += 2
                     ++nIndexRow
                 ELSE
-                    nRow := 2 * (Window():get_top() + 3) + 1
+                    nRow := nMinRow
                     nIndexRow := 1
                 ENDIF
             CASE nKey == K_UP
-                IF nRow > 2 * (Window():get_top + 3) + 1
+                IF nRow > nMinRow
                     nRow -= 2
                     --nIndexRow
                 ELSE
-                    nRow := 2 * (Window():get_top() + 1) + 3 + nLength * 4
+                    nRow := nMaxRow
                     nIndexRow := 2 * nLength
                 ENDIF
             CASE nKey == K_LEFT
-                IF nCol > 2 * nWidth
+                IF nCol > nMinCol
                     nCol -= 2 * nWidth
                     --nIndexCol
                 ELSE
-                    nCol := nWidth * nLength * 2
+                    nCol := nMaxCol
                     nIndexCol := nLength
                 ENDIF
             CASE nKey == K_RIGHT
-                IF nCol < nWidth * nLength * 2
+                IF nCol < nMaxCol
                     nCol += 2 * nWidth
                     ++nIndexCol
                 ELSE
-                    nCol := 2 * nWidth
+                    nCol := nMinCol
                     nIndexCol := 1
                 ENDIF
             CASE nKey == K_CTRL_DOWN .OR. nKey == K_PGDN
                 nIndexRow := 2 * nLength
-                nRow := 2 * (Window():get_top() + 1) + 3 + nLength * 4
+                nRow := nMaxRow
             CASE nKey == K_CTRL_UP .OR. nKey == K_PGUP
                 nIndexRow := 1
-                nRow := 2 * (Window():get_top() + 3) + 1
+                nRow := nMinRow
             CASE nKey == K_CTRL_LEFT
                 nIndexCol := 1
-                nCol := 2 * nWidth
+                nCol := nMinCol
             CASE nKey == K_CTRL_RIGHT 
                 nIndexCol := nLength
-                nCol := nWidth * nLength * 2
+                nCol := nMaxCol 
             CASE nKey == K_ENTER
                 lSave := .T.
                 EXIT
@@ -127,7 +132,7 @@ STATIC FUNCTION get_color()
 
 RETURN IF(lSave, acColors[nIndexRow] + IF(lPlus, '+', '') + '/' + acColors[nIndexCol], '')
 
-STATIC PROCEDURE draw_colors(acColors, nRow, nWidth)
+STATIC PROCEDURE draw_colors(acColors, nRow, nCol, nWidth)
 
     LOCAL lPlus := .F.
     LOCAL cColor
@@ -136,25 +141,25 @@ STATIC PROCEDURE draw_colors(acColors, nRow, nWidth)
     DispBegin()
 
     FOR i := 1 TO Len(acColors)
-        @ nRow * 2, 2 * i * nWidth SAY PadC(acColors[i], nWidth) COLOR 'R'
+        @ nRow, 2 * i * nWidth + nCol SAY PadC(acColors[i], nWidth) COLOR 'R'
     NEXT
 
     DO WHILE .T.
         FOR i := 1 TO Len(acColors)
 
             IF lPlus
-                @ (Len(acColors) + i + nRow) * 2, 1 SAY PadC(acColors[i] + '+', nWidth) COLOR 'R'
+                @ 2 * (Len(acColors) + i) + nRow, nCol SAY PadC(acColors[i] + '+', nWidth) COLOR 'R'
             ELSE
-                @ (i + nRow) * 2, 1 SAY PadC(acColors[i], nWidth) COLOR 'R'
+                @ 2 * i + nRow, nCol SAY PadC(acColors[i], nWidth) COLOR 'R'
             ENDIF
 
             FOR j := 1 TO Len(acColors)
                 cColor := acColors[i] + IF(lPlus, '+', '') + '/' + acColors[j]
 
                 IF lPlus
-                    @ (Len(acColors) + i + nRow) * 2, 2 * j * nWidth SAY PadC(cColor, nWidth) COLOR acColors[i] + '+/' + acColors[j]
+                    @ 2 * (Len(acColors) + i) + nRow, 2 * j * nWidth +  nCol SAY PadC(cColor, nWidth) COLOR acColors[i] + '+/' + acColors[j]
                 ELSE
-                    @ (i + nRow) * 2, 2 * j * nWidth SAY PadC(cColor, nWidth) COLOR acColors[i] + '/' + acColors[j]
+                    @ 2 * i + nRow, 2 * j * nWidth + nCol SAY PadC(cColor, nWidth) COLOR acColors[i] + '/' + acColors[j]
                 ENDIF
             NEXT
         NEXT

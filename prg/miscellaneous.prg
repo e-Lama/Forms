@@ -38,7 +38,7 @@ RETURN IF(Empty(field->code), .T., Parser():check_correctness(hb_ATokens(field->
 
 FUNCTION important_form(cID)
 
-    LOCAL acImportantForms := {'CREATE_FORM', 'SET_DISTINCT_NAME', 'WHERE_MOVE', 'SWAP', 'GET_VARIABLE'}
+    LOCAL acImportantForms := {'CREATE_FORM', 'SET_DISTINCT_NAME', 'WHERE_MOVE', 'SWAP', 'GET_VARIABLE', 'SETTINGS'}
 
 RETURN AScan(acImportantForms, AllTrim(cId)) != 0
 

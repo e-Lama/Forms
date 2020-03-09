@@ -96,7 +96,9 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         , .F.;
                                                         , {Config():get_config('DefaultWindowCreatorBox')};
                                                         , {'C'};
-                                                        , {{| oGet | is_box(AllTrim(oGet:buffer))}};
+                                                        , {{| oGet | is_box(hb_Translate(AllTrim(oGet:buffer), 'EN', 'UTF8EX'))}};
+                                                        , .F.;
+                                                        , IS_BOX; 
                                                         );
                                         , Variable():new('Color';
                                                         , .F.;
@@ -142,7 +144,9 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         , .F.;
                                                         , {Config():get_config('DefaultBoxCreatorBox')};
                                                         , {'C'};
-                                                        , {{| oGet | is_box(AllTrim(oGet:buffer))}};
+                                                        , {{| oGet | is_box(hb_Translate(AllTrim(oGet:buffer), 'EN', 'UTF8EX'))}};
+                                                        , .F.;
+                                                        , IS_BOX;
                                                         );
                                         , Variable():new('Color';
                                                         , .F.;
@@ -627,7 +631,9 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         , ::is_variable(acForm, 6);
                                                         , {::extract_value(acForm, 6, hJson)};
                                                         , {'C'};
-                                                        , {{| oGet | is_box(AllTrim(oGet:buffer))}};
+                                                        , {{| oGet | is_box(hb_Translate(AllTrim(oGet:buffer), 'EN', 'UTF8EX'))}};
+                                                        , .F.;
+                                                        , IS_BOX;
                                                         );
                                         , Variable():new(IF(::is_variable(acForm, 7), ::extract_name(acForm, 7), 'Color');
                                                         , ::is_variable(acForm, 7);
@@ -667,7 +673,9 @@ METHOD make_form_array(xCode) CLASS Creator
                                                         , ::is_variable(acForm, 6);
                                                         , {::extract_value(acForm, 6, hJson)};
                                                         , {'C'};
-                                                        , {{| oGet | is_box(AllTrim(oGet:buffer))}};
+                                                        , {{| oGet | is_box(hb_Translate(AllTrim(oGet:buffer), 'EN', 'UTF8EX'))}};
+                                                        , .F.;
+                                                        , IS_BOX;
                                                         );
                                         , Variable():new(IF(::is_variable(acForm, 7), ::extract_name(acForm, 7), 'Color');
                                                         , ::is_variable(acForm, 7);
@@ -1259,8 +1267,8 @@ METHOD save_form() CLASS Creator
     LOCAL cVariable := Config():get_config('SaveAsVariable')
     LOCAL cString := Creator():cType + LINE_SEPARATOR
     LOCAL axStructure := {;
-                            {'begin_name', 'C', 20, 0}; 
-                            , {'name', 'C', 20, 0};
+                            {'begin_name', 'C', 40, 0}; 
+                            , {'name', 'C', 40, 0};
                             , {'value', 'C', 20, 0};
                             , {'method', 'C', 8, 0};
                             , {'is_ID', 'L', 1, 0};
