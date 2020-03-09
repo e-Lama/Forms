@@ -3,6 +3,7 @@
 #include "functions.ch"
 
 #define COLOR_FIELD_SIZE 40
+#define PATH_FIELD_SIZE 100
 
 PROCEDURE settings()
 
@@ -24,6 +25,8 @@ PROCEDURE settings()
 
     IF lRestart
         Inform(cRestart)
+
+        KEYBOARD Chr(K_ESC) + Chr(K_ENTER)
     ENDIF
 
 RETURN
@@ -93,9 +96,9 @@ STATIC FUNCTION change_settings()
                                 , 'SaveColor';
                                 , PadR(Config():get_config('SaveColor'), COLOR_FIELD_SIZE);
                                 , 'dbfPath';
-                                , Config():get_config('dbfPath');
+                                , PadR(Config():get_config('dbfPath'), PATH_FIELD_SIZE);
                                 , 'ntxPath';
-                                , Config():get_config('ntxPath');
+                                , PadR(Config():get_config('ntxPath'), PATH_FIELD_SIZE);
                                )
     LOCAL lChanged := .F.
     LOCAL cKey

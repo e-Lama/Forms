@@ -97,7 +97,7 @@ FUNCTION create_initial_config_hash()
                             , 'CriticalError', 'Critical error! Program is going to be closed!';
                             , 'ImportantForm', "The selected form is crucial for the program. It's modification or deletion may cause irreparable damage. Backup is recommended. Continue anyway?";
                             , 'OnlyOneWindowAllowed', 'Only one window per form is allowed';
-                            , 'NecessaryRestart', 'The program will be restarted to apply a new setting';
+                            , 'NecessaryRestart', 'The program has to be restarted to apply a new setting. It will be turn off for security reasons';
                             ;/*** INNER LIB ***/
                             , 'Title', 'Forms v0.2 eLama';
                             , 'CantCreateConfigFile', 'Creating of the configuration file has failed';

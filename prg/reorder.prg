@@ -112,7 +112,9 @@ STATIC PROCEDURE swap()
         throw(Config():get_config('CriticalError'))
     ENDIF
     
-    IF nFirst == nSecond .OR. nFirst < 1 .OR. nFirst > LastRec() .OR. nSecond < 1 .OR. nSecond > LastRec()
+    IF LastKey() == K_ESC
+        //...
+    ELSEIF nFirst == nSecond .OR. nFirst < 1 .OR. nFirst > LastRec() .OR. nSecond < 1 .OR. nSecond > LastRec()
         Inform(Config():get_config('IncorrectValues'))
         RESTORE KEYS FROM axOldKeys
         RETURN
@@ -151,7 +153,9 @@ STATIC PROCEDURE move()
         throw(Config():get_config('CriticalError'))
     ENDIF
 
-    IF nTo == field->line_nr .OR. nTo < 1 .OR. nTo > LastRec()
+    IF LastKey() == K_ESC
+        //...
+    ELSEIF nTo == field->line_nr .OR. nTo < 1 .OR. nTo > LastRec()
         Inform(Config():get_config('IncorrectValues'))
         RESTORE KEYS FROM axOldKeys
         RETURN
