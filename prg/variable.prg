@@ -12,12 +12,12 @@ CREATE CLASS Variable
 EXPORTED:
 
     METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTrim, nType, nIndex) CONSTRUCTOR
-    METHOD get_value() INLINE ::axValues[::nIndex]
-    METHOD get_type() INLINE ValType(::axValues[::nIndex])
-    METHOD get_name() INLINE ::cName
-    METHOD is_variable_id() INLINE ::lVariableID
+    METHOD get_value() INLINE ::__axValues[::__nIndex]
+    METHOD get_type() INLINE ValType(::__axValues[::__nIndex])
+    METHOD get_name() INLINE ::__cName
+    METHOD is_variable_id() INLINE ::__lVariableID
 
-    METHOD set_value(xValue) INLINE ::axValues[::nIndex] := xValue
+    METHOD set_value(xValue) INLINE ::__axValues[::__nIndex] := xValue
 
     METHOD edit()
 
@@ -25,59 +25,59 @@ EXPORTED:
 
     METHOD handle_variables()
 
-    OPERATOR '++' INLINE ++::axValues[::nIndex], Self
-    OPERATOR '--' INLINE --::axValues[::nIndex], Self
-    OPERATOR '+=' ARG xArg INLINE ::axValues[::nIndex] += xArg, Self
-    OPERATOR '-=' ARG xArg INLINE ::axValues[::nIndex] -= xArg, Self
+    OPERATOR '++' INLINE ++::__axValues[::__nIndex], Self
+    OPERATOR '--' INLINE --::__axValues[::__nIndex], Self
+    OPERATOR '+=' ARG xArg INLINE ::__axValues[::__nIndex] += xArg, Self
+    OPERATOR '-=' ARG xArg INLINE ::__axValues[::__nIndex] -= xArg, Self
 
 HIDDEN:
 
-    VAR cName AS CHARACTER
-    VAR lVariableID AS LOGICAL INIT .F.
-    VAR axValues AS ARRAY INIT Array(0)
-    VAR acPossibleTypes AS ARRAY INIT Array(0)
-    VAR abValidates AS ARRAY INIT Array(0)
-    VAR lAlwaysTrim AS LOGICAL INIT .F.
-    VAR nType AS NUMERIC INIT NONE
+    VAR __cName AS CHARACTER
+    VAR __lVariableID AS LOGICAL INIT .F.
+    VAR __axValues AS ARRAY INIT Array(0)
+    VAR __acPossibleTypes AS ARRAY INIT Array(0)
+    VAR __abValidates AS ARRAY INIT Array(0)
+    VAR __lAlwaysTrim AS LOGICAL INIT .F.
+    VAR __nType AS NUMERIC INIT NONE
 
-    VAR nIndex AS NUMERIC INIT 1
+    VAR __nIndex AS NUMERIC INIT 1
 
-    METHOD remove_spaces(cVariable)
-    METHOD get_type_array()
+    METHOD __remove_spaces(cVariable)
+    METHOD __get_type_array()
 
-    METHOD change_value(nIndex, lUpdated)
-    METHOD change_type(lUpdated)
-    METHOD changeable_type() INLINE Len(::acPossibleTypes) > 1
+    METHOD __change_value(nIndex, lUpdated)
+    METHOD __change_type(lUpdated)
+    METHOD __changeable_type() INLINE Len(::__acPossibleTypes) > 1
 
-    METHOD create_variables_file()
+    METHOD __create_variables_file()
 
 ENDCLASS LOCKED
 
 METHOD new(cName, lVariableID, axValues, acPossibleTypes, abValidates, lAlwaysTrim, nType, nIndex) CLASS Variable
 
-    ::cName := cName
-    ::axValues := axValues
-    ::acPossibleTypes := acPossibleTypes
-    ::abValidates := abValidates
-    ::lVariableID := lVariableID
+    ::__cName := cName
+    ::__axValues := axValues
+    ::__acPossibleTypes := acPossibleTypes
+    ::__abValidates := abValidates
+    ::__lVariableID := lVariableID
 
     IF ValType(lAlwaysTrim) == 'L'
-        ::lAlwaysTrim := lAlwaysTrim
+        ::__lAlwaysTrim := lAlwaysTrim
     ENDIF
 
     IF ValType(nIndex) == 'N'
-        ::nIndex := nIndex
+        ::__nIndex := nIndex
     ENDIF
 
     IF ValType(nType) == 'N'
-        ::nType := nType
+        ::__nType := nType
     ENDIF
 
 RETURN Self
 
 METHOD to_string(lVariable, cName) CLASS Variable
 
-    LOCAL xValue := ::axValues[::nIndex]
+    LOCAL xValue := ::__axValues[::__nIndex]
     LOCAL cType := ValType(xValue)
     LOCAL cString := IF(lVariable, 'V', 'C') + cType
 
@@ -85,7 +85,7 @@ METHOD to_string(lVariable, cName) CLASS Variable
         IF ValType(cName) == 'C'
             RETURN cString + cName
         ELSE
-            RETURN cString + ::cName
+            RETURN cString + ::__cName
         ENDIF
     ELSE
         DO CASE
@@ -106,7 +106,7 @@ METHOD to_string(lVariable, cName) CLASS Variable
 
 RETURN cString
 
-METHOD change_value(nIndex, lUpdated) CLASS Variable
+METHOD __change_value(nIndex, lUpdated) CLASS Variable
 
     MEMVAR GETLIST
 
@@ -118,7 +118,7 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
     LOCAL nBottom := Window():get_bottom() - 1
     LOCAL nRight := Window():get_right() - 1
     LOCAL lContinue := .T.
-    LOCAL xValue := ::axValues[nIndex]
+    LOCAL xValue := ::__axValues[nIndex]
     LOCAL cType := ValType(xValue)
     LOCAL hVariables := hb_Hash()
     LOCAL cOldScreen
@@ -145,7 +145,7 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
                     lContinue := .F.
                 ELSE
                     Inform(Config():get_config('IncorrectValueVariable'))
-                    xValue := ::axValues[nIndex]
+                    xValue := ::__axValues[nIndex]
                 ENDIF
             ENDDO
 
@@ -156,7 +156,7 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
                 SET KEY K_F2 TO select_color()
                 SET KEY K_F3 TO select_box()
 
-                IF ::nType == IS_BOX
+                IF ::__nType == IS_BOX
                    xValue := hb_Translate(xValue, 'EN', hb_cdpSelect())
                 ENDIF
             ENDIF
@@ -199,8 +199,8 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
         ENDIF
 
         IF cType == 'A'
-            lUpdated := !array_equals(xValue, ::axValues[nIndex])
-        ELSEIF xValue != ::axValues[nIndex]
+            lUpdated := !array_equals(xValue, ::__axValues[nIndex])
+        ELSEIF xValue != ::__axValues[nIndex]
             lUpdated := .T.
         ENDIF
 
@@ -208,11 +208,11 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
             IF ::lAlwaysTrim
                 xValue := AllTrim(xValue)
             ELSE
-               xValue := ::remove_spaces(xValue)
+               xValue := ::__remove_spaces(xValue)
             ENDIF
         ENDIF
 
-        IF ::nType == IS_BOX
+        IF ::__nType == IS_BOX
             xValue := hb_Translate(xValue, hb_cdpSelect(), 'EN')
         ENDIF
 
@@ -226,12 +226,12 @@ METHOD change_value(nIndex, lUpdated) CLASS Variable
 
 RETURN xValue
 
-METHOD get_type_array()
+METHOD __get_type_array()
 
     LOCAL acArray := Array(0)
     LOCAL cType
     
-    FOR EACH cType IN ::acPossibleTypes
+    FOR EACH cType IN ::__acPossibleTypes
         SWITCH cType
             CASE 'N'
                 AAdd(acArray, 'NUMERIC')
@@ -250,10 +250,10 @@ METHOD get_type_array()
 
 RETURN acArray
 
-METHOD change_type(lUpdated)
+METHOD __change_type(lUpdated)
 
-    LOCAL acMenuItems := ::get_type_array()
-    LOCAL nChoose := ::nIndex
+    LOCAL acMenuItems := ::__get_type_array()
+    LOCAL nChoose := ::__nIndex
 
     IF YesNo(Config():get_config('ChangeVariableDataType'))
 
@@ -279,17 +279,17 @@ METHOD edit() CLASS Variable
     WSelect(0)
 
     IF ::changeable_type() 
-        nNewIndex := ::change_type(@lUpdated)
+        nNewIndex := ::__change_type(@lUpdated)
     ELSE
-        nNewIndex := ::nIndex
+        nNewIndex := ::__nIndex
     ENDIF
 
     IF nNewIndex != 0
-        xNewValue := ::change_value(nNewIndex, @lUpdated)
+        xNewValue := ::__change_value(nNewIndex, @lUpdated)
 
         IF lUpdated .AND. YesNo(Config():get_config('SaveVariableEditing'))
-            ::axValues[nNewIndex] := xNewValue
-            ::nIndex := nNewIndex
+            ::__axValues[nNewIndex] := xNewValue
+            ::__nIndex := nNewIndex
             lSave := .T.
         ENDIF
     ENDIF
@@ -298,7 +298,7 @@ METHOD edit() CLASS Variable
 
 RETURN lSave
 
-METHOD remove_spaces(cVariable) CLASS Variable
+METHOD __remove_spaces(cVariable) CLASS Variable
 
     LOCAL nChoose := Dialog(Config():get_config('DialogRemoveSpaces'), {Config():get_config('DefaultNo'), Config():get_config('FromLeft'), Config():get_config('FromRight'), Config():get_config('FromBoth')})
 
@@ -324,7 +324,7 @@ METHOD handle_variables() CLASS Variable
         lSuccess := (Alias() == 'DBVARIABLES')
     ELSE
         IF YesNo(cNoDataBaseFileDialog)
-            lSuccess := ::create_variables_file()
+            lSuccess := ::__create_variables_file()
             IF !lSuccess
                 Inform(cNoDataBaseFileInform)
             ENDIF
@@ -340,7 +340,7 @@ METHOD handle_variables() CLASS Variable
 
 RETURN lSuccess
 
-METHOD create_variables_file() CLASS Variable
+METHOD __create_variables_file() CLASS Variable
 
     LOCAL axStruct := { ;
                       {'ID', 'C', 50, 0};

@@ -34,8 +34,8 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_window
 
     SAVE SCREEN TO cScreen
 
-    ::clear_window_flag()
-    ::set_type(OBJECT_WINDOW)
+    ::_clear_window_flag()
+    ::_set_type(OBJECT_WINDOW)
 
     IF PCount() != 0
         xFormCodeWithoutWindow := hb_ADel(AClone(xFormCode), 1, .T.)
@@ -44,10 +44,10 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_window
             lFinish := .T.
             Inform(Parser():log(''))
         ELSE
-            ::make_form_array(xFormCode)
+            ::_make_form_array(xFormCode)
         ENDIF
     ELSE
-        ::make_form_array()
+        ::_make_form_array()
     ENDIF
 
     DO WHILE !lFinish
@@ -57,7 +57,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_window
         RESTORE SCREEN FROM cScreen 
         WSelect(nOldWindow)
 
-        ::display_form()
+        ::_display_form()
 
         IF PCount() != 0
 
@@ -76,46 +76,46 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_window
                 lActiveUpperLeftCorner := !lActiveUpperLeftCorner
             CASE nKey == K_UP
                 IF lActiveUpperLeftCorner 
-                    IF ::get_value(N_TOP_WN) - 1 <= ::get_value(N_BOTTOM_WN) .AND. ::get_value(N_TOP_WN) >= Window():get_top()
-                        ::decrement(N_TOP_WN)
+                    IF ::_get_value(N_TOP_WN) - 1 <= ::_get_value(N_BOTTOM_WN) .AND. ::_get_value(N_TOP_WN) >= Window():get_top()
+                        ::_decrement(N_TOP_WN)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_WN) <= ::get_value(N_BOTTOM_WN) - 1 .AND. ::get_value(N_BOTTOM_WN) >= Window():get_top()
-                        ::decrement(N_BOTTOM_WN)
+                    IF ::_get_value(N_TOP_WN) <= ::_get_value(N_BOTTOM_WN) - 1 .AND. ::_get_value(N_BOTTOM_WN) >= Window():get_top()
+                        ::_decrement(N_BOTTOM_WN)
                     ENDIF
                 ENDIF    
             CASE nKey == K_LEFT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_WN) - 1 <= ::get_value(N_RIGHT_WN) .AND. ::get_value(N_LEFT_WN) >= Window():get_left()
-                        ::decrement(N_LEFT_WN)
+                    IF ::_get_value(N_LEFT_WN) - 1 <= ::_get_value(N_RIGHT_WN) .AND. ::_get_value(N_LEFT_WN) >= Window():get_left()
+                        ::_decrement(N_LEFT_WN)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_WN) <= ::get_value(N_RIGHT_WN) - 1 .AND. ::get_value(N_RIGHT_WN) >= Window():get_left()
-                        ::decrement(N_RIGHT_WN)
+                    IF ::_get_value(N_LEFT_WN) <= ::_get_value(N_RIGHT_WN) - 1 .AND. ::_get_value(N_RIGHT_WN) >= Window():get_left()
+                        ::_decrement(N_RIGHT_WN)
                     ENDIF
                 ENDIF
             CASE nKey == K_DOWN
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_TOP_WN) + 1 <= ::get_value(N_BOTTOM_WN) .AND. ::get_value(N_TOP_WN) <= Window():get_bottom()
-                        ::increment(N_TOP_WN)
+                    IF ::_get_value(N_TOP_WN) + 1 <= ::_get_value(N_BOTTOM_WN) .AND. ::_get_value(N_TOP_WN) <= Window():get_bottom()
+                        ::_increment(N_TOP_WN)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_WN) <= ::get_value(N_BOTTOM_WN) + 1 .AND. ::get_value(N_BOTTOM_WN) <= Window():get_bottom()
-                        ::increment(N_BOTTOM_WN)
+                    IF ::_get_value(N_TOP_WN) <= ::_get_value(N_BOTTOM_WN) + 1 .AND. ::_get_value(N_BOTTOM_WN) <= Window():get_bottom()
+                        ::_increment(N_BOTTOM_WN)
                     ENDIF
                 ENDIF
             CASE nKey == K_RIGHT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_WN) + 1 <= ::get_value(N_RIGHT_WN) .AND. ::get_value(N_LEFT_WN) <= Window():get_right()
-                        ::increment(N_LEFT_WN)
+                    IF ::_get_value(N_LEFT_WN) + 1 <= ::_get_value(N_RIGHT_WN) .AND. ::_get_value(N_LEFT_WN) <= Window():get_right()
+                        ::_increment(N_LEFT_WN)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_WN) <= ::get_value(N_RIGHT_WN) + 1 .AND. ::get_value(N_RIGHT_WN) <= Window():get_right()
-                        ::increment(N_RIGHT_WN)
+                    IF ::_get_value(N_LEFT_WN) <= ::_get_value(N_RIGHT_WN) + 1 .AND. ::_get_value(N_RIGHT_WN) <= Window():get_right()
+                        ::_increment(N_RIGHT_WN)
                     ENDIF
                 ENDIF
             CASE nKey == K_ENTER
-                ::form_fast_edit(WRow(), WCol(), WLastRow(), WLastCol(), cScreen, xFormCodeWithoutWindow, xGetPos)
+                ::_form_fast_edit(WRow(), WCol(), WLastRow(), WLastCol(), cScreen, xFormCodeWithoutWindow, xGetPos)
             CASE nKey == K_ALT_ENTER
                 IF YesNo(Config():get_config('DoReadOrder'))
                     ReadModal(GETLIST)
@@ -123,7 +123,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_window
             CASE nKey == K_ESC
                 IF YesNo(Config():get_config('YesNoBreakEdition'))
                     IF YesNo(Config():get_config('YesNoSave'))
-                        IF ::save_form()
+                        IF ::_save_form()
                             lFinish := .T.
                             lSave := .T.
                         ENDIF

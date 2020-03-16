@@ -58,7 +58,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_get
     ENDIF
 
     IF !lFinish
-        ::set_type(OBJECT_GET)
+        ::_set_type(OBJECT_GET)
 
         CLEAR GETS
 
@@ -66,7 +66,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_get
             lFinish := .T.
             Inform(Parser():log(''))
         ELSE
-            ::make_form_array(xFormCode)
+            ::_make_form_array(xFormCode)
 
             IF Alias() == 'DBREORDER'
                 GETLIST[xGetPos] := __objClone(ATail(GETLIST))
@@ -88,7 +88,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_get
             ENDIF
 
             prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
-            ::display_form()
+            ::_display_form()
             prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
         ELSE
             IF WSelect() > 0
@@ -99,7 +99,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_get
                 RESTORE SCREEN FROM cScreen
             ENDIF
 
-            ::display_form()
+            ::_display_form()
         ENDIF
 
         IF ValType(aoWasGetList) == 'A' .AND. Len(aoWasGetList) != 0 .AND. Len(GETLIST) != 0
@@ -118,23 +118,23 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_get
 
         DO CASE
             CASE nKey == K_UP
-                IF ::get_value(N_ROW_GET) >= nTopLimit
-                    ::decrement(N_ROW_GET)
+                IF ::_get_value(N_ROW_GET) >= nTopLimit
+                    ::_decrement(N_ROW_GET)
                 ENDIF
             CASE nKey == K_LEFT
-                IF ::get_value(N_COL_GET) >= nLeftLimit
-                    ::decrement(N_COL_GET)
+                IF ::_get_value(N_COL_GET) >= nLeftLimit
+                    ::_decrement(N_COL_GET)
                 ENDIF
             CASE nKey == K_DOWN
-                IF ::get_value(N_ROW_GET) <= nBottomLimit
-                    ::increment(N_ROW_GET)
+                IF ::_get_value(N_ROW_GET) <= nBottomLimit
+                    ::_increment(N_ROW_GET)
                 ENDIF
             CASE nKey == K_RIGHT
-                IF ::get_value(N_COL_GET) <= nRightLimit
-                    ::increment(N_COL_GET)
+                IF ::_get_value(N_COL_GET) <= nRightLimit
+                    ::_increment(N_COL_GET)
                 ENDIF
             CASE nKey == K_ENTER
-                ::form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
+                ::_form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
             CASE nKey == K_ALT_ENTER
                 IF YesNo(Config():get_config('DoReadOrder'))
                     ReadModal(aoWasGetList)
@@ -142,7 +142,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_get
             CASE nKey == K_ESC
                 IF YesNo(Config():get_config('YesNoBreakEdition'))
                     IF YesNo(Config():get_config('YesNoSave'))
-                        IF ::save_form()
+                        IF ::_save_form()
                             lFinish := .T.
                             lSave := .T.
                         ENDIF

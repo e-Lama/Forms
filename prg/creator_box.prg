@@ -58,14 +58,14 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_box
     ENDIF
 
     IF !lFinish
-        ::set_type(OBJECT_BOX)
+        ::_set_type(OBJECT_BOX)
         CLEAR GETS
 
         IF !prepare_form(xFormCode)
             lFinish := .T.
             Inform(Parser():log(''))
         ELSE
-            ::make_form_array(xFormCode)
+            ::_make_form_array(xFormCode)
         ENDIF
     ENDIF
 
@@ -82,7 +82,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_box
             ENDIF
 
             prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
-            ::display_form()
+            ::_display_form()
             prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
         ELSE
             IF WSelect() > 0
@@ -93,7 +93,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_box
                 RESTORE SCREEN FROM cScreen
             ENDIF
 
-            ::display_form()
+            ::_display_form()
         ENDIF
 
         nKey := Inkey(0)
@@ -103,46 +103,46 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_box
                 lActiveUpperLeftCorner := !lActiveUpperLeftCorner
             CASE nKey == K_UP
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_TOP_BOX) - 1 <= ::get_value(N_BOTTOM_BOX).AND. ::get_value(N_TOP_BOX) >= nTopLimit
-                        ::decrement(N_TOP_BOX)
+                    IF ::_get_value(N_TOP_BOX) - 1 <= ::_get_value(N_BOTTOM_BOX).AND. ::_get_value(N_TOP_BOX) >= nTopLimit
+                        ::_decrement(N_TOP_BOX)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_BOX) <= ::get_value(N_BOTTOM_BOX) - 1 .AND. ::get_value(N_BOTTOM_BOX) >= nTopLimit
-                        ::decrement(N_BOTTOM_BOX)
+                    IF ::_get_value(N_TOP_BOX) <= ::_get_value(N_BOTTOM_BOX) - 1 .AND. ::_get_value(N_BOTTOM_BOX) >= nTopLimit
+                        ::_decrement(N_BOTTOM_BOX)
                     ENDIF
                 ENDIF    
             CASE nKey == K_LEFT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_BOX) - 1 <= ::get_value(N_RIGHT_BOX) .AND. ::get_value(N_LEFT_BOX) >= nLeftLimit
-                        ::decrement(N_LEFT_BOX)
+                    IF ::_get_value(N_LEFT_BOX) - 1 <= ::_get_value(N_RIGHT_BOX) .AND. ::_get_value(N_LEFT_BOX) >= nLeftLimit
+                        ::_decrement(N_LEFT_BOX)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_BOX) <= ::get_value(N_RIGHT_BOX) - 1 .AND. ::get_value(N_RIGHT_BOX) >= nLeftLimit
-                        ::decrement(N_RIGHT_BOX)
+                    IF ::_get_value(N_LEFT_BOX) <= ::_get_value(N_RIGHT_BOX) - 1 .AND. ::_get_value(N_RIGHT_BOX) >= nLeftLimit
+                        ::_decrement(N_RIGHT_BOX)
                     ENDIF
                 ENDIF
             CASE nKey == K_DOWN
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_TOP_BOX) + 1 <= ::get_value(N_BOTTOM_BOX) .AND. ::get_value(N_TOP_BOX) <= nBottomLimit
-                        ::increment(N_TOP_BOX)
+                    IF ::_get_value(N_TOP_BOX) + 1 <= ::_get_value(N_BOTTOM_BOX) .AND. ::_get_value(N_TOP_BOX) <= nBottomLimit
+                        ::_increment(N_TOP_BOX)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_BOX) <= ::get_value(N_BOTTOM_BOX) + 1 .AND. ::get_value(N_BOTTOM_BOX) <= nBottomLimit
-                        ::increment(N_BOTTOM_BOX)
+                    IF ::_get_value(N_TOP_BOX) <= ::_get_value(N_BOTTOM_BOX) + 1 .AND. ::_get_value(N_BOTTOM_BOX) <= nBottomLimit
+                        ::_increment(N_BOTTOM_BOX)
                     ENDIF
                 ENDIF
             CASE nKey == K_RIGHT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_BOX) + 1 <= ::get_value(N_RIGHT_BOX) .AND. ::get_value(N_LEFT_BOX) <= nRightLimit
-                        ::increment(N_LEFT_BOX)
+                    IF ::_get_value(N_LEFT_BOX) + 1 <= ::_get_value(N_RIGHT_BOX) .AND. ::_get_value(N_LEFT_BOX) <= nRightLimit
+                        ::_increment(N_LEFT_BOX)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_BOX) <= ::get_value(N_RIGHT_BOX) + 1 .AND. ::get_value(N_RIGHT_BOX) <= nRightLimit
-                        ::increment(N_RIGHT_BOX)
+                    IF ::_get_value(N_LEFT_BOX) <= ::_get_value(N_RIGHT_BOX) + 1 .AND. ::_get_value(N_RIGHT_BOX) <= nRightLimit
+                        ::_increment(N_RIGHT_BOX)
                     ENDIF
                 ENDIF
             CASE nKey == K_ENTER
-                ::form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
+                ::_form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
             CASE nKey == K_ALT_ENTER
                 IF YesNo(Config():get_config('DoReadOrder'))
                     ReadModal(GETLIST)
@@ -150,7 +150,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_box
             CASE nKey == K_ESC
                 IF YesNo(Config():get_config('YesNoBreakEdition'))
                     IF YesNo(Config():get_config('YesNoSave')) 
-                        IF ::save_form()
+                        IF ::_save_form()
                             lFinish := .T.
                             lSave := .T.
                         ENDIF

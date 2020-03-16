@@ -14,7 +14,7 @@ EXPORTED:
 
 HIDDEN:
 
-    CLASSVAR lDropdownListbox AS LOGICAL INIT .F.
+    CLASSVAR __lDropdownListbox AS LOGICAL INIT .F.
 
 ENDCLASS LOCK
 
@@ -66,14 +66,14 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
     ENDIF
 
     IF !lFinish
-        ::set_type(OBJECT_LISTBOX)
+        ::_set_type(OBJECT_LISTBOX)
         CLEAR GETS
 
         IF !prepare_form(xFormCode)
             lFinish := .T.
             Inform(Parser():log(''))
         ELSE
-            ::make_form_array(xFormCode)
+            ::_make_form_array(xFormCode)
 
             IF Alias() == 'DBREORDER'
                 GETLIST[xGetPos] := __objClone(ATail(GETLIST))
@@ -95,7 +95,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
             ENDIF
 
             prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
-            ::display_form()
+            ::_display_form()
             prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
         ELSE
             IF WSelect() > 0
@@ -106,10 +106,10 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
                 RESTORE SCREEN FROM cScreen
             ENDIF
 
-            ::display_form()
+            ::_display_form()
         ENDIF
 
-        IF ::lDropdownListbox
+        IF ::__lDropdownListbox
             IF ALias() == 'DBREORDER'
                 GETLIST[xGetPos][LISTBOX_SLOT]:open()
             ELSE
@@ -135,49 +135,49 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
             CASE nKey == K_ALT_A
                 lActiveUpperLeftCorner := !lActiveUpperLeftCorner
             CASE nKey == K_ALT_Z
-                ::lDropdownListbox := !::lDropdownListbox
+                ::__lDropdownListbox := !::__lDropdownListbox
             CASE nKey == K_UP
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_TOP_LSB) - 1 <= ::get_value(N_BOTTOM_LSB).AND. ::get_value(N_TOP_LSB) >= nTopLimit
-                        ::decrement(N_TOP_LSB)
+                    IF ::_get_value(N_TOP_LSB) - 1 <= ::_get_value(N_BOTTOM_LSB).AND. ::_get_value(N_TOP_LSB) >= nTopLimit
+                        ::_decrement(N_TOP_LSB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_LSB) <= ::get_value(N_BOTTOM_LSB) - 1 .AND. ::get_value(N_BOTTOM_LSB) >= nTopLimit
-                        ::decrement(N_BOTTOM_LSB)
+                    IF ::_get_value(N_TOP_LSB) <= ::_get_value(N_BOTTOM_LSB) - 1 .AND. ::_get_value(N_BOTTOM_LSB) >= nTopLimit
+                        ::_decrement(N_BOTTOM_LSB)
                     ENDIF
                 ENDIF    
             CASE nKey == K_LEFT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_LSB) - 1 <= ::get_value(N_RIGHT_LSB) .AND. ::get_value(N_LEFT_LSB) >= nLeftLimit
-                        ::decrement(N_LEFT_LSB)
+                    IF ::_get_value(N_LEFT_LSB) - 1 <= ::_get_value(N_RIGHT_LSB) .AND. ::_get_value(N_LEFT_LSB) >= nLeftLimit
+                        ::_decrement(N_LEFT_LSB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_LSB) <= ::get_value(N_RIGHT_LSB) - 1 .AND. ::get_value(N_RIGHT_LSB) >= nLeftLimit
-                        ::decrement(N_RIGHT_LSB)
+                    IF ::_get_value(N_LEFT_LSB) <= ::_get_value(N_RIGHT_LSB) - 1 .AND. ::_get_value(N_RIGHT_LSB) >= nLeftLimit
+                        ::_decrement(N_RIGHT_LSB)
                     ENDIF
                 ENDIF
             CASE nKey == K_DOWN
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_TOP_LSB) + 1 <= ::get_value(N_BOTTOM_LSB) .AND. ::get_value(N_TOP_LSB) <= nBottomLimit
-                        ::increment(N_TOP_LSB)
+                    IF ::_get_value(N_TOP_LSB) + 1 <= ::_get_value(N_BOTTOM_LSB) .AND. ::_get_value(N_TOP_LSB) <= nBottomLimit
+                        ::_increment(N_TOP_LSB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_TOP_LSB) <= ::get_value(N_BOTTOM_LSB) + 1 .AND. ::get_value(N_BOTTOM_LSB) <= nBottomLimit
-                        ::increment(N_BOTTOM_LSB)
+                    IF ::_get_value(N_TOP_LSB) <= ::_get_value(N_BOTTOM_LSB) + 1 .AND. ::_get_value(N_BOTTOM_LSB) <= nBottomLimit
+                        ::_increment(N_BOTTOM_LSB)
                     ENDIF
                 ENDIF
             CASE nKey == K_RIGHT
                 IF lActiveUpperLeftCorner
-                    IF ::get_value(N_LEFT_LSB) + 1 <= ::get_value(N_RIGHT_LSB) .AND. ::get_value(N_LEFT_LSB) <= nRightLimit
-                        ::increment(N_LEFT_LSB)
+                    IF ::_get_value(N_LEFT_LSB) + 1 <= ::_get_value(N_RIGHT_LSB) .AND. ::_get_value(N_LEFT_LSB) <= nRightLimit
+                        ::_increment(N_LEFT_LSB)
                     ENDIF
                 ELSE
-                    IF ::get_value(N_LEFT_LSB) <= ::get_value(N_RIGHT_LSB) + 1 .AND. ::get_value(N_RIGHT_LSB) <= nRightLimit
-                        ::increment(N_RIGHT_LSB)
+                    IF ::_get_value(N_LEFT_LSB) <= ::_get_value(N_RIGHT_LSB) + 1 .AND. ::_get_value(N_RIGHT_LSB) <= nRightLimit
+                        ::_increment(N_RIGHT_LSB)
                     ENDIF
                 ENDIF
             CASE nKey == K_ENTER
-                ::form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
+                ::_form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
             CASE nKey == K_ALT_ENTER
                 IF YesNo(Config():get_config('DoReadOrder'))
                     ReadModal(aoWasGetList)
@@ -185,7 +185,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
             CASE nKey == K_ESC
                 IF YesNo(Config():get_config('YesNoBreakEdition'))
                     IF YesNo(Config():get_config('YesNoSave'))
-                        IF ::save_form()
+                        IF ::_save_form()
                             lFinish := .T.
                             lSave := .T.
                         ENDIF
@@ -204,11 +204,11 @@ RETURN lSave
 
 METHOD dropdown(lDropdown) CLASS Creator_listbox
 
-    LOCAL lWasDropdown := ::lDropdownListbox
+    LOCAL lWasDropdown := ::__lDropdownListbox
 
     IF lDropdown != NIL
         assert_type(lDropdown, 'L')
-        ::lDropdownListbox := lDropdown
+        ::__lDropdownListbox := lDropdown
     ENDIF
 
 RETURN lWasDropdown

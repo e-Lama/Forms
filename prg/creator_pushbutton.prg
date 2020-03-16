@@ -58,14 +58,14 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_pushbutton
     ENDIF
 
     IF !lFinish
-        ::set_type(OBJECT_PUSHBUTTON)
+        ::_set_type(OBJECT_PUSHBUTTON)
         CLEAR GETS
 
         IF !prepare_form(xFormCode)
             lFinish := .T.
             Inform(Parser():log(''))
         ELSE
-            ::make_form_array(xFormCode)
+            ::_make_form_array(xFormCode)
 
             IF Alias() == 'DBREORDER'
                 GETLIST[xGetPos] := __objClone(ATail(GETLIST))
@@ -87,7 +87,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_pushbutton
             ENDIF
 
             prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
-            ::display_form()
+            ::_display_form()
             prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
         ELSE
             IF WSelect() > 0
@@ -98,7 +98,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_pushbutton
                 RESTORE SCREEN FROM cScreen
             ENDIF
 
-            ::display_form()
+            ::_display_form()
         ENDIF
 
         IF ValType(aoWasGetList) == 'A' .AND. Len(aoWasGetList) != 0 .AND. Len(GETLIST) != 0
@@ -117,23 +117,23 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_pushbutton
 
         DO CASE
             CASE nKey == K_UP
-                IF ::get_value(N_ROW_CHB) >= nTopLimit
-                    ::decrement(N_ROW_CHB)
+                IF ::_get_value(N_ROW_CHB) >= nTopLimit
+                    ::_decrement(N_ROW_CHB)
                 ENDIF
             CASE nKey == K_LEFT
-                IF ::get_value(N_COL_CHB) >= nLeftLimit
-                    ::decrement(N_COL_CHB)
+                IF ::_get_value(N_COL_CHB) >= nLeftLimit
+                    ::_decrement(N_COL_CHB)
                 ENDIF
             CASE nKey == K_DOWN
-                IF ::get_value(N_ROW_CHB) <= nBottomLimit
-                    ::increment(N_ROW_CHB)
+                IF ::_get_value(N_ROW_CHB) <= nBottomLimit
+                    ::_increment(N_ROW_CHB)
                 ENDIF
             CASE nKey == K_RIGHT
-                IF ::get_value(N_COL_CHB) <= nRightLimit
-                    ::increment(N_COL_CHB)
+                IF ::_get_value(N_COL_CHB) <= nRightLimit
+                    ::_increment(N_COL_CHB)
                 ENDIF
             CASE nKey == K_ENTER
-                ::form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
+                ::_form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
             CASE nKey == K_ALT_ENTER
                 IF YesNo(Config():get_config('DoReadOrder'))
                     IF ValType(xGetPos) == 'N'
@@ -145,7 +145,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_pushbutton
             CASE nKey == K_ESC
                 IF YesNo(Config():get_config('YesNoBreakEdition'))
                     IF YesNo(Config():get_config('YesNoSave'))
-                        IF ::save_form()
+                        IF ::_save_form()
                             lFinish := .T.
                             lSave := .T.
                         ENDIF
