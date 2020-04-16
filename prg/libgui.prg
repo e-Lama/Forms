@@ -137,6 +137,8 @@ FUNCTION create_initial_config_hash()
                             , 'Found', 'Found: ';
                             , 'Code', ' Code ';
                             , 'CantLock', 'Somebody is using this record at the moment';
+                            , 'ShowCrucialForms', .F.;
+                            , 'CantSaveEverything', "Some changes won't be saved";
                             )
 RETURN hConfig
 

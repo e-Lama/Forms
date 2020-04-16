@@ -5,6 +5,9 @@
 #define COLOR_FIELD_SIZE 40
 #define PATH_FIELD_SIZE 100
 
+#define ROW_BROWSE_EDITABLE {'menu', 'reorder', 'save'}
+#define ROW_BROWSE_EDITABLE_STRING 'menu;reorder;save'
+
 PROCEDURE settings()
 
     LOCAL cQuestion := Config():get_config('DialogWhatShouldIDo')
@@ -57,6 +60,7 @@ STATIC FUNCTION change_settings()
 
     LOCAL cOldHeader := Window():header(Config():get_config('SettingsHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('SettingsFooter'))
+    LOCAL cOldFilter := dbFilter()
     LOCAL hVariables := hb_Hash('DefaultYesNoAllowMove';
                                 , Config():get_config('DefaultYesNoAllowMove');
                                 , 'DefaultDialogAllowMove';
@@ -99,6 +103,8 @@ STATIC FUNCTION change_settings()
                                 , PadR(Config():get_config('dbfPath'), PATH_FIELD_SIZE);
                                 , 'ntxPath';
                                 , PadR(Config():get_config('ntxPath'), PATH_FIELD_SIZE);
+                                , 'ShowCrucialForms';
+                                , Config():get_config('ShowCrucialForms');
                                )
     LOCAL lChanged := .F.
     LOCAL cKey
@@ -109,6 +115,10 @@ STATIC FUNCTION change_settings()
     SAVE SCREEN TO cOldScreen
 
     Window():refresh_header_footer()
+
+    SET FILTER TO
+
+    add_row_browse_widths(hVariables)
 
     IF Parser():prepare_form_from_database(Config():get_config('Language'), 'SETTINGS', hVariables)
         
@@ -125,13 +135,24 @@ STATIC FUNCTION change_settings()
         hVariables := change_codepages(Parser():get_answers())
 
         FOR EACH cKey IN hb_hKeys(hVariables)
-            Config():set_config(cKey, hVariables[cKey])
+
+            IF ValType(hVariables[cKey]) == 'C'
+                hVariables[cKey] := RTrim(hVariables[cKey])
+            ENDIF
+
+            IF Left(cKey, Len(cKey) - 1) $ ROW_BROWSE_EDITABLE_STRING
+                change_row_browse(cKey, hVariables[cKey])
+            ELSE
+                Config():set_config(cKey, hVariables[cKey])
+            ENDIF
         NEXT
 
         Config():save_config()
 
         lChanged := .T.
     ENDIF
+
+    SET FILTER TO &(cOldFilter)
 
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
@@ -149,3 +170,53 @@ STATIC FUNCTION change_codepages(hHash)
     hHash['DefaultBoxCreatorBox'] := hb_Translate(hHash['DefaultBoxCreatorBox'], hb_cdpSelect(), 'EN')
 
 RETURN hHash
+
+STATIC PROCEDURE add_row_browse_widths(hVariables)
+
+    LOCAL nOldSelect := Select()
+    LOCAL cId
+
+    SELECT dbRowBrowse
+
+    FOR EACH cId IN ROW_BROWSE_EDITABLE
+        SEEK cId
+
+        DO WHILE RTrim(field->id) == cId
+            hVariables[cId + LTrim(Str(field->col_nr))] := field->width
+            SKIP
+        ENDDO
+    NEXT
+
+    SELECT (nOldSelect)
+
+RETURN 
+
+STATIC PROCEDURE change_row_browse(cKey, nNewWidth)
+
+    LOCAL nOldSelect := Select()
+    LOCAL cId := Left(cKey, Len(cKey) - 1)
+    LOCAL nColumn := Val(Right(cKey, 1))
+
+    SELECT dbRowBrowse
+
+    SEEK PadR(cId, Len(field->id))
+
+    DO WHILE RTrim(field->id) == cId
+        IF field->col_nr == nColumn
+            IF RLock()
+                field->width := nNewWidth
+                COMMIT
+                UNLOCK
+            ELSE
+                Inform(Config():get_config('CantLock'))
+                Inform(Config():get_config('CantSaveEverything'))
+            ENDIF
+
+            EXIT
+        ENDIF
+        SKIP
+    ENDDO
+
+    SELECT (nOldSelect)
+
+RETURN

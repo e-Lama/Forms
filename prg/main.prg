@@ -52,6 +52,11 @@ PROCEDURE main()
               ACTION {| oRowBrowse, nKey | row_browse_main_search(oRowBrowse, nKey)} BORDER Config():get_config('RowBrowseDefaultBox');
               COLOR Config():get_config('DefaultColor')
 
+            IF !Config():get_config('ShowCrucialForms')
+                SET FILTER TO !important_form(field->id)
+                GO TOP
+            ENDIF
+
             oRowBrowse:display()
         ELSE
             Inform(INITIALIZATION_FAILED)

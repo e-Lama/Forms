@@ -124,5 +124,7 @@
   "Language": "ENGLISH",
   "Found": "Found: ",
   "Code": " Code ",
-  "CantLock": "Somebody is using this record at the moment"
+  "CantLock": "Somebody is using this record at the moment",
+  "ShowCrucialForms": false,
+  "CantSaveEverything": "Some changes won't be saved"
 }

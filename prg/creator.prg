@@ -37,7 +37,7 @@ PROTECTED:
 
     METHOD _is_variable(acForm, nIndex) INLINE SubStr(acForm[nIndex], 1, 1) == VARIABLE 
     METHOD _extract_type(acForm, nIndex) INLINE SubStr(acForm[nIndex], 2, 1)
-    METHOD _extract_value(acForm, nIndex, hJson) INLINE IF(::_is_variable(acForm, nIndex), hJson[::extract_name(acForm, nIndex)], cast(SubStr(acForm[nIndex], 3), ::_extract_type(acForm, nIndex)))
+    METHOD _extract_value(acForm, nIndex, hJson) INLINE IF(::_is_variable(acForm, nIndex), hJson[::_extract_name(acForm, nIndex)], cast(SubStr(acForm[nIndex], 3), ::_extract_type(acForm, nIndex)))
     METHOD _extract_name(acForm, nIndex) INLINE RTrim(SubStr(acForm[nIndex], 3))
 
     METHOD _create_window_form_shadow(acForm, nIndex, hJson)
@@ -1455,10 +1455,10 @@ METHOD _form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos
         ENDIF
 
         prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
-        ::display_form()
+        ::_display_form()
         prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
     ELSE
-        ::display_form()
+        ::_display_form()
     ENDIF
 
     IF ::__lIsWindow .AND. ValType(xFormCode) == 'A'
@@ -1523,10 +1523,10 @@ METHOD _form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos
                 ENDIF
 
                 prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
-                lDisplayed := ::display_form()
+                lDisplayed := ::_display_form()
                 prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
             ELSE
-                lDisplayed := ::display_form()
+                lDisplayed := ::_display_form()
             ENDIF
 
             IF lDisplayed

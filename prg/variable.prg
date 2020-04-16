@@ -205,7 +205,7 @@ METHOD __change_value(nIndex, lUpdated) CLASS Variable
         ENDIF
 
         IF cType == 'C'
-            IF ::lAlwaysTrim
+            IF ::__lAlwaysTrim
                 xValue := AllTrim(xValue)
             ELSE
                xValue := ::__remove_spaces(xValue)
@@ -278,7 +278,7 @@ METHOD edit() CLASS Variable
 
     WSelect(0)
 
-    IF ::changeable_type() 
+    IF ::__changeable_type() 
         nNewIndex := ::__change_type(@lUpdated)
     ELSE
         nNewIndex := ::__nIndex
