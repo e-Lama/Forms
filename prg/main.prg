@@ -160,6 +160,7 @@ STATIC PROCEDURE create_new_form()
 
     LOCAL cOldHeader := Window():header(Config():get_config('CreateNewFormHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('CreateNewFormFooter'))
+    LOCAL cOldFilter := dbFilter()
     LOCAL nOldRecNo := RecNo()
     LOCAL cNewId := Space(Len(field->id))
     LOCAL cNewLanguage := Space(Len(field->language))
@@ -173,6 +174,7 @@ STATIC PROCEDURE create_new_form()
 
     SAVE SCREEN TO cOldScreen
     ZAP KEYS TO axOldKeys
+    SET FILTER TO
 
     IF YesNo(Config():get_config('CreateForm'))
 
@@ -231,6 +233,7 @@ STATIC PROCEDURE create_new_form()
     ENDIF
 
     UNLOCK ALL
+    SET FILTER TO &(cOldFilter)
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen
@@ -409,6 +412,7 @@ STATIC PROCEDURE change_id()
     LOCAL nOldRecNo := RecNo()
     LOCAL cOldHeader := Window():header(Config():get_config('ChangeIDHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('ChangeIDFooter'))
+    LOCAL cOldFilter := dbFilter()
     LOCAL hVariables := hb_Hash('cLanguage';
                                 , field->language;
                                 , 'cID';
@@ -422,6 +426,7 @@ STATIC PROCEDURE change_id()
 
     ZAP KEYS TO axOldKeys
     SAVE SCREEN TO cOldScreen
+    SET FILTER TO
 
     IF EoF() 
         Inform(Config():get_config('NoRecordSelected'))
@@ -473,6 +478,7 @@ STATIC PROCEDURE change_id()
     ENDIF
 
     UNLOCK ALL
+    SET FILTER TO &(cOldFilter)
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen
@@ -486,6 +492,7 @@ STATIC PROCEDURE clone()
 
     LOCAL cOldHeader := Window():header(Config():get_config('CloneHeader'))
     LOCAL cOldFooter := Window():footer(Config():get_config('CloneFooter'))
+    LOCAL cOldFilter := dbFilter()
     LOCAL cNewId := field->id
     LOCAL cNewLanguage := field->language
     LOCAL cCode := field->code
@@ -508,6 +515,7 @@ STATIC PROCEDURE clone()
     ENDIF
 
     SAVE SCREEN TO cOldScreen
+    SET FILTER TO
 
     Window():refresh_header_footer()
 
@@ -563,6 +571,7 @@ STATIC PROCEDURE clone()
     ENDDO
 
     UNLOCK ALL
+    SET FILTER TO &(cOldFilter)
     Window():header(cOldHeader)
     Window():footer(cOldFooter)
     RESTORE SCREEN FROM cOldScreen
