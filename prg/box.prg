@@ -36,7 +36,16 @@ RETURN
 
 STATIC FUNCTION get_box()
 
-    LOCAL acBoxes := {'┌', '─', '┐', '│', '┘', '─', '└', '│', '╔', '═', '╗', '║', '╝', '═', '╚', '║', '╓', '╖', '╜', '╙', '╒', '╕', '╛', '╘', '░', '▒', '▓', '┤', '╣', '┴', '┬', '├', '┼', '╩', '╦', '╠', '╬', '█', '▄', '¦', '▀', '■'} //42 elements
+    //There are 42 elements in this array
+    LOCAL acBoxes := {;
+                      '┌', '─', '┐', '│', '┘', '─';
+                      , '└', '│', '╔', '═', '╗', '║';
+                      , '╝', '═', '╚', '║', '╓', '╖';
+                      , '╜', '╙', '╒', '╕', '╛', '╘';
+                      , '░', '▒', '▓', '┤', '╣', '┴';
+                      , '┬', '├', '┼', '╩', '╦', '╠';
+                      , '╬', '█', '▄', '¦', '▀', '■';
+                     } 
     LOCAL nLength := Len(acBoxes)
     LOCAL nMinRow := Window():center_row() - Int(nLength / ROWS)
     LOCAL nMinCol := Window():center_col() - Int(nLength / COLS)

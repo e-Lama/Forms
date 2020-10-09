@@ -5,6 +5,7 @@
 #include "functions.ch"
 #include "rowbrowse.ch"
 #include "parser.ch"
+#include "menu.ch"
 
 STATIC PROCEDURE delete_row()
 
@@ -504,6 +505,7 @@ PROCEDURE change_order()
 
         SAVE SCREEN TO cOldScreen
 
+        SET KEY K_RBUTTONUP TO display_reorder_menu()
         SET KEY K_DEL TO delete_row()
         SET KEY K_F2 TO rebuild()
         SET KEY K_F3 TO swap()
@@ -522,7 +524,7 @@ PROCEDURE change_order()
 
         @ Window():get_top() + 1, Window():get_left() + 1, Window():get_bottom() - 1, Window():get_right() - 1;
           ROWBROWSE oRowBrowse ID 'reorder' COLOR Config():get_config('DefaultColor') BORDER Config():get_config('RowBrowseDefaultBox');
-          TITLE Config():get_config('ReorderRowBrowseTitle') ACTION {| oRowBrowse, nKey | row_browse_reorder_search(oRowBrowse, nKey)}
+          TITLE Config():get_config('ReorderRowBrowseTitle') ACTION {| oRowBrowse, nKey, nRow | row_browse_reorder_search(oRowBrowse, nKey, nRow)}
 
         oRowBrowse:display()
 
@@ -554,13 +556,74 @@ PROCEDURE change_order()
 
 RETURN
 
-FUNCTION row_browse_reorder_search(oRowBrowse, nKey)
+STATIC PROCEDURE display_reorder_menu()
+
+    LOCAL acMenuItems := Config():get_config('ReorderMenuItems')
+    LOCAL nWidth := max_of_array(length_array(acMenuItems)) + 5
+    LOCAL nRow := MRow()
+    LOCAL nCol := MCol()
+    LOCAL nHeight := 6
+    LOCAL nResult
+    LOCAL axOldKeys
+
+    IF LastRec() <= nRow - Window():get_top() - IF(Empty(Window():header()), 0, 1) - 1
+        RETURN
+    ELSEIF nRow >= Window():get_bottom() - IF(Empty(Window():footer()), 0, 1) - 1
+        RETURN
+    ENDIF
+
+    ZAP KEYS TO axOldKeys
+
+    IF nRow + nHeight > Window():get_bottom()
+        nRow -= nHeight
+    ENDIF
+
+    IF nCol + nWidth > Window():get_right()
+        nCol -= nWidth
+    ENDIF
+
+    @ nRow, nCol, nRow + nHeight, nCol + nWidth MENU TO nResult;
+      ITEMS acMenuItems SELECTABLE .T. MOUSABLE;
+      FUNCTION 'menu_search_allow_exit_move';
+      COLOR Config():get_config('DefaultMenuColor');
+      BORDER Config():get_config('DefaultBox') SCROLLABLE;
+      KEYS {K_ENTER, {K_ESC, K_RBUTTONDOWN}, K_ALT_UP, K_ALT_LEFT, K_ALT_DOWN, K_ALT_RIGHT, K_ALT_ENTER, K_LBUTTONUP, K_LBUTTONDOWN}
+
+    DO CASE
+        CASE nResult == 1
+            delete_row()
+        CASE nResult == 2
+            rebuild()
+        CASE nResult == 3
+            swap()
+        CASE nResult == 4
+            edit()
+        CASE nResult == 5
+            move()
+        CASE nResult == 6
+            display_line() 
+        CASE nResult == 7
+            display_form()
+        CASE nResult == 8
+            move_row_down()
+        CASE nResult == 9
+            move_row_up()
+        CASE nResult == 10
+            add_window()
+        //Brakuje jakiegos wyjscia z tego
+    ENDCASE
+
+    RESTORE KEYS FROM axOldKeys
+
+RETURN
+
+FUNCTION row_browse_reorder_search(oRowBrowse, nKey)//, nRow)
 
     LOCAL cCurrentString := LTrim(oRowBrowse:search_keys())
     LOCAL nReturn := ROWBROWSE_NOTHING
     LOCAL nOldRecNo := RecNo()
 
-    IF AScan({K_DOWN, K_UP, K_HOME, K_END, K_PGUP, K_PGDN}, nKey) != 0
+    IF AScan({K_DOWN, K_UP, K_HOME, K_END, K_PGUP, K_PGDN, K_MWFORWARD, K_MWBACKWARD, K_LBUTTONDOWN, K_LBUTTONUP, K_RBUTTONUP, K_MOUSEMOVE}, nKey) != 0
         oRowBrowse:search_keys('')
         oRowBrowse:draw_border()
         oRowBrowse:print_title()

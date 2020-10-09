@@ -3,6 +3,7 @@
 
 #include "rowbrowse.ch"
 #include "functions.ch"
+#include "menu.ch"
 
 #include "creator.ch"
 #include "variables.ch"
@@ -48,11 +49,21 @@ PROTECTED:
     METHOD _validate_listbox_list(xList)
     METHOD _validate_radiogroup_group(xGroup)
 
+    METHOD _mouse_sleep() INLINE hb_IdleSleep(0.1)
+
+    METHOD _next_stiffed() INLINE ++Creator():__nStiffed, Creator():__nStiffed %= (STIFFED_HORIZONTALLY + 1)
+    METHOD _get_stiffed() INLINE Creator():__nStiffed
+
+    METHOD _display_menu(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos, xActiveUpperLeftCorner, lFinish, lSave)
+
 HIDDEN:
+
+    METHOD __get_menu_items()
 
     CLASSVAR __aoVariables AS ARRAY INIT Array(0)
     CLASSVAR __cType AS CHARACTER INIT ''
     CLASSVAR __lIsWindow AS LOGICAL INIT .F.
+    CLASSVAR __nStiffed AS NUMERIC INIT STIFFED_NONE
 
 ENDCLASS LOCK 
 
@@ -1326,7 +1337,7 @@ METHOD _save_form() CLASS Creator
     @ 0, 0, MaxRow(), MaxCol() ROWBROWSE oRowBrowse ID 'save';
       COLOR Config():get_config('SaveColor') BORDER Config():get_config('RowBrowseDefaultBox') TITLE Config():get_config('SaveTitle');
       CARGO {hJson, Creator():__aoVariables} ACTION {| oRowBrowse, nKey | row_browse_save(oRowBrowse, nKey)};
-      COLORBLOCK {|| IF(field->is_ID, {3, 4}, {1, 2})} 
+      COLORBLOCK {|| IF(field->is_ID, {3, 4}, IF(field->method == Config():get_config('SaveAsVariable'), {5, 6}, {1, 2}))} 
 
     DO WHILE !lEnd
         oRowBrowse:display()
@@ -1483,10 +1494,10 @@ METHOD _form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos
             acMenuItems[i] := Creator():__aoVariables[i]:get_name()
         NEXT
 
-        nChooseMenu := display_menu_center_autosize(Int(Window():center_row()), Int(Window():center_col()), acMenuItems, .T.;
-                                               , 'menu_search_allow_exit_move', 1, Config():get_config('DefaultColor');
-                                               , Config():get_config('DefaultBox');
-                                               )
+        @ Int(Window():center_row), Int(Window():center_col()) MENU CENTER AUTOSIZE TO nChooseMenu;
+          ITEMS acMenuItems SELECTABLE .T. FUNCTION 'menu_search_allow_exit_move'; 
+          COLOR Config():get_config('DefaultMenuColor') BORDER Config():get_config('DefaultBox');
+          MOUSABLE
 
         IF nChooseMenu == 0
         
@@ -1603,13 +1614,167 @@ METHOD _validate_radiogroup_group(xGroup) CLASS Creator
 
 RETURN .T.
 
+METHOD __get_menu_items() CLASS Creator
+
+    DO CASE
+        CASE Creator():__cType == OBJECT_WINDOW
+            RETURN Config():get_config('CreatorWindowMenuItems')
+        CASE Creator():__cType == OBJECT_BOX
+            RETURN Config():get_config('CreatorBoxMenuItems')
+        CASE Creator():__cType == OBJECT_SAY
+            RETURN Config():get_config('CreatorSayMenuItems')
+        CASE Creator():__cType == OBJECT_GET
+            RETURN Config():get_config('CreatorGetMenuItems')
+        CASE Creator():__cType == OBJECT_CHECKBOX
+            RETURN Config():get_config('CreatorCheckboxMenuItems')
+        CASE Creator():__cType == OBJECT_LISTBOX
+            RETURN Config():get_config('CreatorListboxMenuItems')
+        CASE Creator():__cType == OBJECT_RADIOGROUP
+            RETURN Config():get_config('CreatorRadiogroupMenuItems')
+        CASE Creator():__cType == OBJECT_PUSHBUTTON
+            RETURN Config():get_config('CreatorPusbuttonMenuItems')
+    ENDCASE
+
+RETURN {''}
+
+METHOD _display_menu(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos, xActiveUpperLeftCorner, lFinish, lSave) CLASS Creator
+
+    MEMVAR GETLIST
+
+    LOCAL nOldWindow := WSelect()
+    LOCAL acMenuItems := ::__get_menu_items()
+    LOCAL nWidth := max_of_array(length_array(acMenuItems)) + 5
+    LOCAL nHeight := 6
+    LOCAL nRow
+    LOCAL nCol
+    LOCAL nResult
+    LOCAL axOldKeys
+
+    WSelect(0)
+    nRow := MRow()
+    nCol := MCol()
+    WSelect(nOldWindow)
+
+    ZAP KEYS TO axOldKeys
+
+    IF nRow + nHeight > Window():get_bottom()
+        nRow -= nHeight
+    ENDIF
+
+    IF nCol + nWidth > Window():get_right()
+        nCol -= nWidth
+    ENDIF
+
+    @ nRow, nCol, nRow + nHeight, nCol + nWidth MENU TO nResult;
+      ITEMS acMenuItems SELECTABLE .T. MOUSABLE;
+      FUNCTION 'menu_search_allow_exit_move';
+      COLOR Config():get_config('DefaultMenuColor');
+      BORDER Config():get_config('DefaultBox') SCROLLABLE;
+      KEYS {K_ENTER, {K_ESC, K_RBUTTONDOWN}, K_ALT_UP, K_ALT_LEFT, K_ALT_DOWN, K_ALT_RIGHT, K_ALT_ENTER, K_LBUTTONUP, K_LBUTTONDOWN}
+
+    IF ValType(xActiveUpperLeftCorner) == 'L'
+        DO CASE
+            CASE nResult == 1
+                ::_form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
+            CASE nResult == 2
+                xActiveUpperLeftCorner := !xActiveUpperLeftCorner
+            CASE nResult == 3
+                IF YesNo(Config():get_config('DoReadOrder'))
+                    ReadModal(GETLIST)
+                ENDIF
+            CASE nResult == 4
+                ::_next_stiffed()
+            CASE nResult == 5
+                IF YesNo(Config():get_config('YesNoBreakEdition'))
+                    IF YesNo(Config():get_config('YesNoSave')) 
+                        IF ::_save_form()
+                            lFinish := .T.
+                            lSave := .T.
+                        ENDIF
+                    ELSE
+                        lFinish := .T.
+                    ENDIF
+                ENDIF
+        ENDCASE
+    ELSE
+        DO CASE
+            CASE nResult == 1
+                ::_form_fast_edit(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos)
+            CASE nResult == 2
+                IF YesNo(Config():get_config('DoReadOrder'))
+                    ReadModal(GETLIST)
+                ENDIF
+            CASE nResult == 3
+                ::_next_stiffed()
+            CASE nResult == 4
+                IF YesNo(Config():get_config('YesNoBreakEdition'))
+                    IF YesNo(Config():get_config('YesNoSave')) 
+                        IF ::_save_form()
+                            lFinish := .T.
+                            lSave := .T.
+                        ENDIF
+                    ELSE
+                        lFinish := .T.
+                    ENDIF
+                ENDIF
+        ENDCASE
+    ENDIF
+
+    RESTORE KEYS FROM axOldKeys
+
+RETURN NIL
+
 FUNCTION row_browse_save(oRowBrowse, nKey)
 
     LOCAL cConstant := Config():get_config('SaveAsConstant')
     LOCAL cVariable := Config():get_config('SaveAsVariable')
+    LOCAL acMenuItems := Config():get_config('SaveMenuItems')
     LOCAL hJson := oRowBrowse:cargo()[1]
     LOCAL __aoVariables := oRowBrowse:cargo()[2]
+    LOCAL nMouseRow := MRow()
+    LOCAL nMouseCol := MCol()
+    LOCAL nMenuRow := WRow() + nMouseRow
+    LOCAL nMenuCol := WCol() + nMouseCol
+    LOCAL nHeight := Len(acMenuItems) + 1
+    LOCAL nWidth := max_of_array(length_array(acMenuItems)) + 5
     LOCAL cName
+    LOCAL nResult
+
+    IF nKey == K_RBUTTONUP .AND. nMouseRow > 1 .AND. nMouseCol > 0 .AND. nMouseRow < MaxRow() .AND. nMouseCol < MaxCol()
+
+        --nMouseRow
+        DO WHILE nMouseRow > oRowBrowse:get_row_pos()
+            oRowBrowse:Down()
+            --nMouseRow
+        ENDDO
+
+        DO WHILE nMouseRow < oRowBrowse:get_row_pos()
+            oRowBrowse:Up()
+            ++nMouseRow
+        ENDDO
+
+        oRowBrowse:force_stable()
+
+        IF nMenuRow + nHeight > Window():get_bottom()
+            nMenuRow -= nHeight
+        ENDIF
+
+        IF nMenuCol + nWidth > Window():get_right()
+            nMenuCol -= nWidth
+        ENDIF
+            
+        @ nMenuRow, nMenuCol, nMenuRow + nHeight, nMenuCol + nWidth MENU TO nResult;
+          ITEMS acMenuItems SELECTABLE .T. MOUSABLE FUNCTION 'menu_search_allow_exit_move';
+          COLOR Config():get_config('DefaultMenuColor') BORDER Config():get_config('DefaultBox') SCROLLABLE;
+          KEYS {K_ENTER, {K_ESC, K_RBUTTONDOWN}, K_ALT_UP, K_ALT_LEFT, K_ALT_DOWN, K_ALT_RIGHT, K_ALT_ENTER, K_LBUTTONUP, K_LBUTTONDOWN}
+
+        DO CASE
+            CASE nResult == 1
+                nKey := K_SPACE
+            CASE nResult == 2
+                nKey := K_ENTER
+        ENDCASE
+    ENDIF
 
     DO CASE
         CASE nKey == K_SPACE
@@ -1657,6 +1822,33 @@ FUNCTION row_browse_save(oRowBrowse, nKey)
             WMove(WRow(), WCol() - 1)
         CASE nKey == K_ALT_ENTER
             WCenter(.T.)
+        CASE nKey == K_LBUTTONDOWN .AND. nMouseRow >= 0 .AND. nMouseCol >= 0 .AND. nMouseRow <= MaxRow() .AND. nMouseCol <= MaxCol()
+
+            DO WHILE nKey != K_LBUTTONUP
+
+                nKey := Inkey()
+
+                DO CASE
+                    CASE MRow() > nMouseRow .AND. MCol() > nMouseCol
+                        WMove(WRow() + 1, WCol() + 1)
+                    CASE MRow() > nMouseRow .AND. MCol() == nMouseCol
+                        WMove(WRow() + 1, WCol())
+                    CASE MRow() > nMouseRow .AND. MCol() < nMouseCol
+                        WMove(WRow() + 1, WCol() - 1)
+                    CASE MRow() == nMouseRow .AND. MCol() > nMouseCol
+                        WMove(WRow(), WCol() + 1)
+                    CASE MRow() == nMouseRow .AND. MCol() == nMouseCol
+                        WMove(WRow(), WCol())
+                    CASE MRow() == nMouseRow .AND. MCol() < nMouseCol
+                        WMove(WRow(), WCol() - 1)
+                    CASE MRow() < nMouseRow .AND. MCol() > nMouseCol
+                        WMove(WRow() - 1, WCol() + 1)
+                    CASE MRow() < nMouseRow .AND. MCol() == nMouseCol
+                        WMove(WRow() - 1, WCol())
+                    CASE MRow() < nMouseRow .AND. MCol() < nMouseCol
+                        WMove(WRow() - 1, WCol() - 1)
+                ENDCASE
+            ENDDO
     ENDCASE
 
 RETURN ROWBROWSE_NOTHING

@@ -6,8 +6,9 @@
 #include "functions.ch"
 #include "rowbrowse.ch"
 #include "parser.ch"
+#include "menu.ch"
 
-#define INITIALIZATION_FAILED 'Configuration initialization failed!'
+#define INITIALIZATION_FAILED 'Configuration initialization has failed!'
 
 REQUEST HB_CODEPAGE_UTF8EX
 
@@ -30,6 +31,7 @@ PROCEDURE main()
             SELECT dbForms
             SET RELATION TO field->language + field->id INTO dbVariables
 
+            SET KEY K_RBUTTONUP TO display_main_menu()
             SET KEY K_F1 TO change_order()
             SET KEY K_F2 TO create_new_form()
             SET KEY K_F3 TO add_to_form()
@@ -49,8 +51,8 @@ PROCEDURE main()
 
             @ Window():get_top() + 1, Window():get_left() + 1, Window():get_bottom() - 1, Window():get_right() - 1;
               ROWBROWSE oRowBrowse ID 'menu' TITLE Config():get_config('MainRowBrowseTitle');
-              ACTION {| oRowBrowse, nKey | row_browse_main_search(oRowBrowse, nKey)} BORDER Config():get_config('RowBrowseDefaultBox');
-              COLOR Config():get_config('DefaultColor')
+              ACTION {| oRowBrowse, nKey, nRow | row_browse_main_search(oRowBrowse, nKey, nRow)};
+              BORDER Config():get_config('RowBrowseDefaultBox') COLOR Config():get_config('DefaultColor')
 
             IF !Config():get_config('ShowCrucialForms')
                 SET FILTER TO !important_form(field->id)
@@ -80,7 +82,9 @@ INIT PROCEDURE prepare()
     SET DATE TO GERMAN
     SET SCOREBOARD OFF
     hb_cdpSelect('UTF8EX') 
-    SetCancel(.F.)
+    //SetCancel(.F.)
+
+    Set(_SET_EVENTMASK, INKEY_ALL)
 
     CLS
 
@@ -93,6 +97,67 @@ EXIT PROCEDURE finish()
     CLOSE ALL
     CLEAR
     CLS
+
+RETURN
+
+STATIC PROCEDURE display_main_menu()
+
+    LOCAL acMenuItems := Config():get_config('MainMenuItems')
+    LOCAL nWidth := max_of_array(length_array(acMenuItems)) + 5
+    LOCAL nRow := MRow()
+    LOCAL nCol := MCol()
+    LOCAL nHeight := 6
+    LOCAL nResult
+    LOCAL axOldKeys
+
+    IF LastRec() < nRow - Window():get_top() - IF(Empty(Window():header()), 0, 1) - 1
+    //Alert(Str(LastRec()) + ' <= ' + Str(nRow - Window():get_top() - IF(Empty(Window():header()), 0, 1) - 1))
+        RETURN
+    ELSEIF nRow >= Window():get_bottom() - IF(Empty(Window():footer()), 0, 1) - 1
+        RETURN
+    ENDIF
+
+    ZAP KEYS TO axOldKeys
+
+    IF nRow + nHeight > Window():get_bottom()
+        nRow -= nHeight
+    ENDIF
+
+    IF nCol + nWidth > Window():get_right()
+        nCol -= nWidth
+    ENDIF
+
+    @ nRow, nCol, nRow + nHeight, nCol + nWidth MENU TO nResult;
+      ITEMS acMenuItems SELECTABLE .T. MOUSABLE;
+      FUNCTION 'menu_search_allow_exit_move';
+      COLOR Config():get_config('DefaultMenuColor');
+      BORDER Config():get_config('DefaultBox') SCROLLABLE;
+      KEYS {K_ENTER, {K_ESC, K_RBUTTONDOWN}, K_ALT_UP, K_ALT_LEFT, K_ALT_DOWN, K_ALT_RIGHT, K_ALT_ENTER, K_LBUTTONUP, K_LBUTTONDOWN}
+
+    DO CASE
+        CASE nResult == 1
+            change_order()
+        CASE nResult == 2
+            create_new_form()
+        CASE nResult == 3
+            add_to_form()
+        CASE nResult == 4
+            display_form()
+        CASE nResult == 5
+            fast_edit()
+        CASE nResult == 6
+            clone() 
+        CASE nResult == 7
+            change_id()
+        CASE nResult == 8
+            settings()
+        CASE nResult == 9
+            ask_delete_form()
+        CASE nResult == 10
+            quit_program()
+    ENDCASE
+
+    RESTORE KEYS FROM axOldKeys
 
 RETURN
 
@@ -241,7 +306,7 @@ STATIC PROCEDURE create_new_form()
 
 RETURN
 
-STATIC PROCEDURE add_to_form()
+STATIC PROCEDURE add_to_form(nRow, nCol)
 
     MEMVAR GETLIST
 
@@ -255,7 +320,7 @@ STATIC PROCEDURE add_to_form()
 
     ZAP KEYS TO axOldKeys
 
-    IF EoF()
+    IF EoF() .OR. Empty(field->id)
         Inform(Config():get_config('NoRecordSelected'))
         RESTORE KEYS FROM axOldKeys
         RETURN
@@ -267,6 +332,11 @@ STATIC PROCEDURE add_to_form()
         UNLOCK ALL
         RESTORE KEYS FROM axOldKeys
         RETURN
+    ENDIF
+
+    IF important_form(field->id)
+      nRow := NIL
+      nCol := NIL
     ENDIF
 
     Window():refresh_header_footer()
@@ -284,10 +354,11 @@ STATIC PROCEDURE add_to_form()
         
         IF prepare_form() 
 
-            nChoose := display_menu_center_autosize(Window():center_row(), Window():center_col(), acMenuItems, .T.;
-                                                   , 'menu_search_allow_exit_move', 1, Config():get_config('DefaultMenuColor');
-                                                   , Config():get_config('DefaultBox');
-                                                   )
+            @ Int(Window():center_row), Int(Window():center_col()) MENU CENTER AUTOSIZE TO nChoose;
+              ITEMS acMenuItems SELECTABLE .T. FUNCTION 'menu_search_allow_exit_move'; 
+              COLOR Config():get_config('DefaultMenuColor') BORDER Config():get_config('DefaultBox');
+              MOUSABLE
+
             IF nChoose > 0
                 &('Creator_' + Lower(acMenuItems[nChoose]) + '():edit_form()')
             ENDIF

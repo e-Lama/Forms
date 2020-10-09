@@ -9,7 +9,46 @@ EXPORTED:
 
     METHOD edit_form(xFormCode, xGetPos)
 
+HIDDEN:
+
+    METHOD __refresh_and_display(nTop, nLeft, nBottom, nRight, nOldWindow, xFormCode, cScreen)
+
 ENDCLASS LOCK
+
+METHOD __refresh_and_display(nTop, nLeft, nBottom, nRight, nOldWindow, xFormCode, cScreen) CLASS Creator_say
+
+    MEMVAR GETLIST
+
+    DispBegin()
+
+    IF Alias() == 'DBREORDER'
+
+        CLEAR GETS
+        
+        IF WSelect() > 0
+            WClose()
+        ELSE
+            RESTORE SCREEN FROM cScreen
+        ENDIF
+
+        prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
+        ::_display_form()
+        prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
+    ELSE
+        IF WSelect() > 0
+            WSelect(0)
+            RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
+            WSelect(nOldWindow)
+        ELSE
+            RESTORE SCREEN FROM cScreen
+        ENDIF
+
+        ::_display_form()
+    ENDIF
+
+    DispEnd()
+
+RETURN NIL
 
 METHOD edit_form(xFormCode, xGetPos) CLASS Creator_say
 
@@ -28,6 +67,9 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_say
     LOCAL nBottom := WLastRow()
     LOCAL nRight := WLastCol()
     LOCAL lSave := .F.
+    LOCAL nMouseRow
+    LOCAL nMouseCol
+    LOCAL lRefresh
     LOCAL cScreen
     LOCAL nKey
 
@@ -70,30 +112,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_say
 
     DO WHILE !lFinish
 
-        IF Alias() == 'DBREORDER'
-
-            CLEAR GETS
-            
-            IF WSelect() > 0
-                WClose()
-            ELSE
-                RESTORE SCREEN FROM cScreen
-            ENDIF
-
-            prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
-            ::_display_form()
-            prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
-        ELSE
-            IF WSelect() > 0
-                WSelect(0)
-                RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
-                WSelect(nOldWindow)
-            ELSE
-                RESTORE SCREEN FROM cScreen
-            ENDIF
-
-            ::_display_form()
-        ENDIF
+        ::__refresh_and_display(nTop, nLeft, nBottom, nRight, nOldWindow, xFormCode, cScreen)
 
         nKey := Inkey(0)
 
@@ -120,6 +139,50 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_say
                 IF YesNo(Config():get_config('DoReadOrder'))
                     ReadModal(GETLIST)
                 ENDIF
+            CASE nKey == K_LBUTTONDOWN
+
+                nKey := 0
+
+                DO WHILE nKey == K_MOUSEMOVE .OR. nKey == 0
+
+                    nKey := Inkey()
+
+                    nMouseRow := MRow()
+                    nMouseCol := MCol()
+                    lRefresh := .F.
+
+                    IF nMouseRow > ::_get_value(N_ROW_SAY)
+                        IF ::_get_value(N_ROW_SAY) <= nBottomLimit
+                            ::_increment(N_ROW_SAY)
+                            lRefresh := .T.
+                        ENDIF
+                    ELSEIF nMouseRow < ::_get_value(N_ROW_SAY)
+                        IF ::_get_value(N_ROW_SAY) >= nTopLimit
+                            ::_decrement(N_ROW_SAY)
+                            lRefresh := .T.
+                        ENDIF
+                    ENDIF
+
+                    IF nMouseCol > ::_get_value(N_COL_SAY)
+                        IF ::_get_value(N_COL_SAY) <= nRightLimit
+                            ::_increment(N_COL_SAY)
+                            lRefresh := .T.
+                        ENDIF
+                    ELSEIF nMouseCol < ::_get_value(N_COL_SAY)
+                        IF ::_get_value(N_COL_SAY) >= nLeftLimit
+                            ::_decrement(N_COL_SAY)
+                            lRefresh := .T.
+                        ENDIF
+                    ENDIF
+
+                    IF lRefresh
+                        ::__refresh_and_display(nTop, nLeft, nBottom, nRight, nOldWindow, xFormCode, cScreen)
+                    ELSE
+                        ::_mouse_sleep()
+                    ENDIF
+                ENDDO
+            CASE nKey == K_RBUTTONUP
+                ::_display_menu(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos, NIL, @lFinish, @lSave)
             CASE nKey == K_ESC
                 IF YesNo(Config():get_config('YesNoBreakEdition'))
                     IF YesNo(Config():get_config('YesNoSave'))

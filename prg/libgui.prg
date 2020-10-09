@@ -128,7 +128,7 @@ FUNCTION create_initial_config_hash()
                             , 'DefaultListboxCreatorColor', 'RB/G,R/B,BG/R,BG/G,G/B,N/W,W/N,';
                             , 'DefaultRadiogroupCreatorColor', 'GR/B,RB/B,BG/R,,B/R';
                             , 'DefaultPushbuttonCreatorColor', 'GR/B,RB/G,BG/R,B/R,N/W';
-                            , 'SaveColor', 'W/N,N/W,W*/N,N*/W';
+                            , 'SaveColor', 'W/N,N/W,W*/N,N*/W,GR/N,N/GR';
                             , 'dbfPath', 'dbf/';
                             , 'ntxPath', 'ntx/';
                             , 'SaveAsConstant', 'constant';
@@ -139,19 +139,44 @@ FUNCTION create_initial_config_hash()
                             , 'CantLock', 'Somebody is using this record at the moment';
                             , 'ShowCrucialForms', .F.;
                             , 'CantSaveEverything', "Some changes won't be saved";
+                            , 'MainMenuItems', {'Change order', 'Create a new form', 'Add to the form', 'Display a form', 'Fast edit', 'Clone the form', 'Change the ID', 'Settings', 'Delete the form', 'Quit'};
+                            , 'ReorderMenuItems', {'Delete the row', 'Rebuild the row', 'Swap two rows', 'Edit the source', 'Move the row', 'Display the row', 'Display the form', 'Move the row down', 'Move the row up', 'Add a window'};
+                            , 'SaveMenuItems', {'Change the save method', 'Change the variable name'};
+                            , 'CreatorWindowMenuItems', {'Fast edit', 'Change the active corner', 'Stiffen', 'Cancel'};
+                            , 'CreatorBoxMenuItems', {'Fast edit', 'Change the active corner', 'Read', 'Stiffen', 'Cancel'};
+                            , 'CreatorSayMenuItems', {'Fast edit', 'Read', 'Stiffen', 'Cancel'};
+                            , 'CreatorGetMenuItems', {'Fast edit', 'Read', 'Stiffen', 'Cancel'};
+                            , 'CreatorCheckboxMenuItems', {'Fast edit', 'Read', 'Stiffen', 'Cancel'};
+                            , 'CreatorListboxMenuItems', {'Fast edit', 'Change the active corner', 'Read', 'Stiffen', 'Cancel'};
+                            , 'CreatorRadiogroupMenuItems', {'Fast edit', 'Change the active corner', 'Read', 'Stiffen', 'Cancel'};
+                            , 'CreatorPushbuttonMenuItems', {'Fast edit', 'Change the active corner', 'Read', 'Stiffen', 'Cancel'};
                             )
 RETURN hConfig
 
-FUNCTION row_browse_main_search(oRowBrowse, nKey)
+FUNCTION row_browse_main_search(oRowBrowse, nKey, nRow)
 
     LOCAL nOldRecNo := RecNo()
     LOCAL cCurrentString := oRowBrowse:search_keys()
     LOCAL nReturn := ROWBROWSE_NOTHING
 
-    IF AScan({K_DOWN, K_UP, K_HOME, K_END, K_PGUP, K_PGDN}, nKey) != 0
+    IF AScan({K_DOWN, K_UP, K_END, K_MWFORWARD, K_MWBACKWARD, K_LBUTTONDOWN, K_LBUTTONUP, K_RBUTTONUP, K_MOUSEMOVE}, nKey) != 0
         oRowBrowse:search_keys('')
         oRowBrowse:draw_border()
         oRowBrowse:print_title()
+    ELSEIF nKey == K_RBUTTONDOWN
+
+        IF nRow <= LastRec()
+            DO WHILE nRow > oRowBrowse:get_row_pos()
+                oRowBrowse:Down()
+                --nRow
+            ENDDO
+
+            DO WHILE nRow < oRowBrowse:get_row_pos()
+                oRowBrowse:Up()
+                ++nRow
+            ENDDO
+        ENDIF
+
     ELSEIF nKey == K_BS
         cCurrentString := Left(cCurrentString, Len(cCurrentString) - 1)
         oRowBrowse:search_keys(cCurrentString)

@@ -2,6 +2,8 @@
 #include "inkey.ch"
 #include "box.ch"
 
+#include "menu.ch"
+
 #include "functions.ch"
 #include "variables.ch"
 
@@ -257,10 +259,11 @@ METHOD __change_type(lUpdated)
 
     IF YesNo(Config():get_config('ChangeVariableDataType'))
 
-        nChoose := display_menu_center_autosize(Window():center_row(), Window():center_col(), acMenuItems, .T.;
-                                               , 'menu_search_allow_exit_move', 1, Config():get_config('DefaultMenuColor');
-                                               , Config():get_config('DefaultBox');
-                                               )
+        @ Window():center_row, Window():center_col() MENU CENTER AUTOSIZE TO nChoose;
+          ITEMS acMenuItems SELECTABLE .T. FUNCTION 'menu_search_allow_exit_move'; 
+          COLOR Config():get_config('DefaultMenuColor') BORDER Config():get_config('DefaultBox');
+          MOUSABLE
+
         IF nChoose != 0
             lUpdated := .T.
         ENDIF

@@ -14,9 +14,66 @@ EXPORTED:
 
 HIDDEN:
 
+    METHOD __refresh_and_display(nTop, nLeft, nBottom, nRight, nOldWindow, xFormCode, xGetPos, aoWasGetList, cScreen)
+
     CLASSVAR __lDropdownListbox AS LOGICAL INIT .F.
 
 ENDCLASS LOCK
+
+METHOD __refresh_and_display(nTop, nLeft, nBottom, nRight, nOldWindow, xFormCode, xGetPos, aoWasGetList, cScreen) CLASS Creator_listbox
+
+    MEMVAR GETLIST
+
+    DispBegin()
+
+    IF Alias() == 'DBREORDER'
+
+        CLEAR GETS
+
+        IF WSelect() > 0
+            WClose()
+        ELSE
+            RESTORE SCREEN FROM cScreen
+        ENDIF
+
+        prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
+        ::_display_form()
+        prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
+    ELSE
+        IF WSelect() > 0
+            WSelect(0)
+            RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
+            WSelect(nOldWindow)
+        ELSE
+            RESTORE SCREEN FROM cScreen
+        ENDIF
+
+        ::_display_form()
+    ENDIF
+
+    IF ::__lDropdownListbox
+        IF Alias() == 'DBREORDER'
+            GETLIST[xGetPos][LISTBOX_SLOT]:open()
+        ELSE
+            GETLIST[Len(GETLIST)][LISTBOX_SLOT]:open()
+        ENDIF
+    ENDIF
+
+    IF ValType(aoWasGetList) == 'A' .AND. Len(aoWasGetList) != 0 .AND. Len(GETLIST) != 0
+        IF ValType(xFormCode) == 'A'
+            aoWasGetList[xGetPos] := __objClone(GETLIST[xGetPos])
+        ELSE
+            aoWasGetList[Len(aoWasGetList)] := __objClone(ATail(GETLIST))
+        ENDIF
+    ELSE
+        aoWasGetList := clone_objects_array(GETLIST)
+    ENDIF
+    
+    GETLIST := ASize(GETLIST, Len(GETLIST) - 1)
+
+    DispEnd()
+
+RETURN NIL
 
 METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
 
@@ -36,6 +93,9 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
     LOCAL nBottom := WLastRow()
     LOCAL nRight := WLastCol()
     LOCAL lSave := .F.
+    LOCAL nMouseRow
+    LOCAL nMouseCol
+    LOCAL lRefresh
     LOCAL aoWasGetList
     LOCAL cScreen
     LOCAL nKey
@@ -84,50 +144,7 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
 
     DO WHILE !lFinish
 
-        IF Alias() == 'DBREORDER'
-            
-            CLEAR GETS
-
-            IF WSelect() > 0
-                WClose()
-            ELSE
-                RESTORE SCREEN FROM cScreen
-            ENDIF
-
-            prepare_form(ACopy(xFormCode, Array(field->line_nr - 1), 1, field->line_nr - 1))
-            ::_display_form()
-            prepare_form(ACopy(xFormCode, Array(Len(xFormCode) - field->line_nr), field->line_nr + 1))
-        ELSE
-            IF WSelect() > 0
-                WSelect(0)
-                RestScreen(nTop, nLeft, nBottom, nRight, cScreen)
-                WSelect(nOldWindow)
-            ELSE
-                RESTORE SCREEN FROM cScreen
-            ENDIF
-
-            ::_display_form()
-        ENDIF
-
-        IF ::__lDropdownListbox
-            IF ALias() == 'DBREORDER'
-                GETLIST[xGetPos][LISTBOX_SLOT]:open()
-            ELSE
-                GETLIST[Len(GETLIST)][LISTBOX_SLOT]:open()
-            ENDIF
-        ENDIF
-
-        IF ValType(aoWasGetList) == 'A' .AND. Len(aoWasGetList) != 0 .AND. Len(GETLIST) != 0
-            IF ValType(xFormCode) == 'A'
-                aoWasGetList[xGetPos] := __objClone(GETLIST[xGetPos])
-            ELSE
-                aoWasGetList[Len(aoWasGetList)] := __objClone(ATail(GETLIST))
-            ENDIF
-        ELSE
-            aoWasGetList := clone_objects_array(GETLIST)
-        ENDIF
-        
-        GETLIST := ASize(GETLIST, Len(GETLIST) - 1)
+        ::__refresh_and_display(nTop, nLeft, nBottom, nRight, nOldWindow, xFormCode, xGetPos, @aoWasGetList, cScreen)
 
         nKey := Inkey(0)
 
@@ -182,6 +199,76 @@ METHOD edit_form(xFormCode, xGetPos) CLASS Creator_listbox
                 IF YesNo(Config():get_config('DoReadOrder'))
                     ReadModal(aoWasGetList)
                 ENDIF
+            CASE nKey == K_LBUTTONDOWN
+
+                nKey := 0
+
+                DO WHILE nKey == K_MOUSEMOVE .OR. nKey == 0
+
+                    nKey := Inkey()
+
+                    nMouseRow := MRow()
+                    nMouseCol := MCol()
+                    lRefresh := .F.
+
+                    IF lActiveUpperLeftCorner
+                        IF nMouseRow > ::_get_value(N_TOP_BOX)
+                            IF ::_get_value(N_TOP_LSB) + 1 <= ::_get_value(N_BOTTOM_LSB) .AND. ::_get_value(N_TOP_LSB) <= Window():get_bottom()
+                                ::_increment(N_TOP_LSB)
+                                lRefresh := .T.
+                            ENDIF
+                        ELSEIF nMouseRow < ::_get_value(N_TOP_LSB)
+                            IF ::_get_value(N_TOP_LSB) - 1 <= ::_get_value(N_BOTTOM_LSB).AND. ::_get_value(N_TOP_LSB) >= Window():get_top()
+                                ::_decrement(N_TOP_LSB)
+                                lRefresh := .T.
+                            ENDIF
+                        ENDIF
+
+                        IF nMouseCol > ::_get_value(N_LEFT_LSB)
+                            IF ::_get_value(N_LEFT_LSB) + 1 <= ::_get_value(N_RIGHT_LSB) .AND. ::_get_value(N_LEFT_LSB) <= Window():get_right()
+                                ::_increment(N_LEFT_LSB)
+                                lRefresh := .T.
+                            ENDIF
+                        ELSEIF nMouseCol < ::_get_value(N_LEFT_LSB)
+                            IF ::_get_value(N_LEFT_LSB) - 1 <= ::_get_value(N_RIGHT_LSB) .AND. ::_get_value(N_LEFT_LSB) >= Window():get_left()
+                                ::_decrement(N_LEFT_LSB)
+                                lRefresh := .T.
+                            ENDIF
+                        ENDIF
+                    ELSE
+                        IF nMouseRow > ::_get_value(N_BOTTOM_LSB)
+                            IF ::_get_value(N_TOP_LSB) <= ::_get_value(N_BOTTOM_LSB) + 1 .AND. ::_get_value(N_BOTTOM_LSB) <= Window():get_bottom()
+                                ::_increment(N_BOTTOM_LSB)
+                                lRefresh := .T.
+                            ENDIF
+                        ELSEIF nMouseRow < ::_get_value(N_BOTTOM_LSB)
+                            IF ::_get_value(N_TOP_LSB) <= ::_get_value(N_BOTTOM_LSB) - 1 .AND. ::_get_value(N_BOTTOM_LSB) >= Window():get_top()
+                                ::_decrement(N_BOTTOM_LSB)
+                                lRefresh := .T.
+                            ENDIF
+                        ENDIF
+
+                        IF nMouseCol > ::_get_value(N_RIGHT_LSB)
+                            IF ::_get_value(N_LEFT_LSB) <= ::_get_value(N_RIGHT_LSB) + 1 .AND. ::_get_value(N_RIGHT_LSB) <= Window():get_right()
+                                ::_increment(N_RIGHT_LSB)
+                                lRefresh := .T.
+                            ENDIF
+                        ELSEIF nMouseCol < ::_get_value(N_RIGHT_LSB)
+                            IF ::_get_value(N_LEFT_LSB) <= ::_get_value(N_RIGHT_LSB) - 1 .AND. ::_get_value(N_RIGHT_LSB) >= Window():get_left()
+                                ::_decrement(N_RIGHT_LSB)
+                                lRefresh := .T.
+                            ENDIF
+                        ENDIF
+                    ENDIF
+
+                    IF lRefresh
+                        ::__refresh_and_display(nTop, nLeft, nBottom, nRight, nOldWindow, xFormCode, xGetPos, @aoWasGetList, cScreen)
+                    ELSE
+                        ::_mouse_sleep()
+                    ENDIF
+                ENDDO
+            CASE nKey == K_RBUTTONUP
+                ::_display_menu(nTop, nLeft, nBottom, nRight, cScreen, xFormCode, xGetPos, @lActiveUpperLeftCorner, @lFinish, @lSave)
             CASE nKey == K_ESC
                 IF YesNo(Config():get_config('YesNoBreakEdition'))
                     IF YesNo(Config():get_config('YesNoSave'))

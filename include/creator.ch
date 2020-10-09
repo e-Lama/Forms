@@ -4,6 +4,10 @@
 #define CONSTANT 'C'
 #define VARIABLE 'V'
 
+#define STIFFED_NONE 0
+#define STIFFED_VERTICALLY 1
+#define STIFFED_HORIZONTALLY 2
+
 //Type of a form
 #define OBJECT 1
 #define OBJECT_WINDOW 'WN'
